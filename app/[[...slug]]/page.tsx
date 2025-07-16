@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 
 import { getClient } from "@/utils/client";
 import { gql } from "urql";
@@ -137,7 +138,7 @@ export default async function Page({
         {node.title}
       </h1>
       {node.image && (
-        <img
+        <Image
           src={node.image.url}
           alt={node.image.alt}
           width={node.image.width}
