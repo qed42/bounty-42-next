@@ -370,12 +370,9 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-<<<<<<< HEAD
   '@radix-ui/primitive@1.1.2':
     resolution: {integrity: sha512-XnbHrrprsNqZKQhStrSwgRUQzoCI1glLzdw79xiZPoofhGICeZRSQ3dIxAKH1gb3OHfNf4d6f+vAv3kil2eggA==}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   '@radix-ui/react-compose-refs@1.1.2':
     resolution: {integrity: sha512-z4eqJvfiNnFMHIIvXP3CY57y2WJs5g2v3X0zm9mEJkrkNv4rDxu+sg9Jh8EkXyeqBkB7SOcboo9dMVqhyrACIg==}
     peerDependencies:
@@ -385,7 +382,6 @@ packages:
       '@types/react':
         optional: true
 
-<<<<<<< HEAD
   '@radix-ui/react-context@1.1.2':
     resolution: {integrity: sha512-jCi/QKUM2r1Ju5a3J64TH2A5SpKAgh0LpknyqdQ4m6DCV0xJ2HG1xARRwNGPQfi1SLdLWZ1OJz6F4OMBBNiGJA==}
     peerDependencies:
@@ -491,8 +487,6 @@ packages:
       '@types/react-dom':
         optional: true
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   '@radix-ui/react-slot@1.2.3':
     resolution: {integrity: sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A==}
     peerDependencies:
@@ -502,7 +496,6 @@ packages:
       '@types/react':
         optional: true
 
-<<<<<<< HEAD
   '@radix-ui/react-use-callback-ref@1.1.1':
     resolution: {integrity: sha512-FkBMwD+qbGQeMu1cOHnuGB6x4yzPjho8ap5WtbEJ26umhgqVXbhekKUQO+hZEL1vU92a3wHwdp0HAcqAUF5iDg==}
     peerDependencies:
@@ -548,8 +541,6 @@ packages:
       '@types/react':
         optional: true
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
@@ -847,13 +838,10 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
-<<<<<<< HEAD
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
     engines: {node: '>=10'}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   aria-query@5.3.2:
     resolution: {integrity: sha512-COROpnaoap1E2F000S62r6A60uHZnmlvomhfyT2DlTcrY1OrBKn2UhH7qn5wTC9zMvD0AY7csdPSNwKP+7WiQw==}
     engines: {node: '>= 0.4'}
@@ -1030,12 +1018,9 @@ packages:
     resolution: {integrity: sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA==}
     engines: {node: '>=8'}
 
-<<<<<<< HEAD
   detect-node-es@1.1.0:
     resolution: {integrity: sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
@@ -1271,13 +1256,10 @@ packages:
     resolution: {integrity: sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==}
     engines: {node: '>= 0.4'}
 
-<<<<<<< HEAD
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
     engines: {node: '>=6'}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   get-proto@1.0.1:
     resolution: {integrity: sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g==}
     engines: {node: '>= 0.4'}
@@ -1783,7 +1765,6 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-<<<<<<< HEAD
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q==}
     engines: {node: '>=10'}
@@ -1814,8 +1795,6 @@ packages:
       '@types/react':
         optional: true
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
     engines: {node: '>=0.10.0'}
@@ -2062,7 +2041,6 @@ packages:
       '@urql/core': ^5.0.0
       react: '>= 16.8.0'
 
-<<<<<<< HEAD
   use-callback-ref@1.3.3:
     resolution: {integrity: sha512-jQL3lRnocaFtu3V00JToYz/4QkNWswxijDaCVNZRiRTO3HQDLsdu1ZtmIUvV4yPp+rvWm5j0y0TG/S61cuijTg==}
     engines: {node: '>=10'}
@@ -2083,8 +2061,6 @@ packages:
       '@types/react':
         optional: true
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
     engines: {node: '>= 0.4'}
@@ -2360,18 +2336,14 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-<<<<<<< HEAD
   '@radix-ui/primitive@1.1.2': {}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   '@radix-ui/react-compose-refs@1.1.2(@types/react@19.1.8)(react@19.1.0)':
     dependencies:
       react: 19.1.0
     optionalDependencies:
       '@types/react': 19.1.8
 
-<<<<<<< HEAD
   '@radix-ui/react-context@1.1.2(@types/react@19.1.8)(react@19.1.0)':
     dependencies:
       react: 19.1.0
@@ -2466,8 +2438,6 @@ snapshots:
       '@types/react': 19.1.8
       '@types/react-dom': 19.1.6(@types/react@19.1.8)
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   '@radix-ui/react-slot@1.2.3(@types/react@19.1.8)(react@19.1.0)':
     dependencies:
       '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.1.8)(react@19.1.0)
@@ -2475,7 +2445,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.8
 
-<<<<<<< HEAD
   '@radix-ui/react-use-callback-ref@1.1.1(@types/react@19.1.8)(react@19.1.0)':
     dependencies:
       react: 19.1.0
@@ -2510,8 +2479,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.8
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   '@rtsao/scc@1.1.0': {}
 
   '@rushstack/eslint-patch@1.12.0': {}
@@ -2793,13 +2760,10 @@ snapshots:
 
   argparse@2.0.1: {}
 
-<<<<<<< HEAD
   aria-hidden@1.2.6:
     dependencies:
       tslib: 2.8.1
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   aria-query@5.3.2: {}
 
   array-buffer-byte-length@1.0.2:
@@ -3004,11 +2968,8 @@ snapshots:
 
   detect-libc@2.0.4: {}
 
-<<<<<<< HEAD
   detect-node-es@1.1.0: {}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
@@ -3408,11 +3369,8 @@ snapshots:
       hasown: 2.0.2
       math-intrinsics: 1.1.0
 
-<<<<<<< HEAD
   get-nonce@1.0.1: {}
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   get-proto@1.0.1:
     dependencies:
       dunder-proto: 1.0.1
@@ -3890,7 +3848,6 @@ snapshots:
 
   react-is@16.13.1: {}
 
-<<<<<<< HEAD
   react-remove-scroll-bar@2.3.8(@types/react@19.1.8)(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -3918,8 +3875,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.8
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   react@19.1.0: {}
 
   reflect.getprototypeof@1.0.10:
@@ -4275,7 +4230,6 @@ snapshots:
       react: 19.1.0
       wonka: 6.3.5
 
-<<<<<<< HEAD
   use-callback-ref@1.3.3(@types/react@19.1.8)(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -4291,8 +4245,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.8
 
-=======
->>>>>>> b3a0bbb (chore: add shadcn/ui package and replace npm with pnpm.)
   which-boxed-primitive@1.1.1:
     dependencies:
       is-bigint: 1.1.0
