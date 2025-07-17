@@ -215,9 +215,20 @@
     @apply bg-background text-foreground;
   }
   ul {
-    @apply list-disc;
+    @apply list-disc list-inside;
+    padding-left: 1rem;
+  }
+  ol {
+    @apply list-decimal list-inside;
+    padding-left: 1rem;
   }
   a {
     @apply text-blue-600 underline;
+  }
+}
+
+@layer utilities {
+  .text-primary {
+    color: #2d1863 !important;
   }
 }
