@@ -216,11 +216,11 @@
   }
   ul {
     @apply list-disc list-inside;
-    padding-left: 1rem;
+    @apply pl-3;
   }
   ol {
     @apply list-decimal list-inside;
-    padding-left: 1rem;
+    @apply pl-3;
   }
   a {
     @apply text-blue-600 underline;
