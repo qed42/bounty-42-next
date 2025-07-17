@@ -1,6 +1,6 @@
 export default function ProjectListSkeleton() {
   return (
-    <section className="py-12 px-4 max-w-7xl mx-auto animate-pulse">
+    <section className="py-12 lg:py-20 px-4 container mx-auto animate-pulse">
       {/* Section Header Skeleton */}
       <div className="text-center mb-12">
         <div className="h-10 w-1/3 mx-auto bg-muted rounded mb-4" />
@@ -8,8 +8,8 @@ export default function ProjectListSkeleton() {
       </div>
 
       {/* Cards Grid Skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, idx) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, idx) => (
           <div
             key={idx}
             className="flex flex-col bg-muted rounded-lg shadow  space-y-4"
