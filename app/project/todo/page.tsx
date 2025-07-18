@@ -40,7 +40,6 @@ export default async function Page() {
   });
 
   const { data, error } = await client.query(GET_PROJECT_DATA, {}, { requestPolicy: "network-only" });
-  console.log(data, 'data');
 
   if (error) {
     return <div className="text-red-500">Error loading project data.</div>;
