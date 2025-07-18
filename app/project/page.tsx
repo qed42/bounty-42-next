@@ -45,6 +45,20 @@ const sampleCards = [
     teamCount: 2,
     image: "/image-placeholder.webp?height=200&width=400",
   },
+  {
+    id: "7",
+    title: "Event Management Tool",
+    description: "An all-in-one platform to create, promote, and manage events with real-time attendee tracking.",
+    teamCount: 3,
+    image: "/image-placeholder.webp?height=200&width=400",
+  },
+  {
+    id: "8",
+    title: "Remote Collaboration Suite",
+    description: "A toolkit for teams to collaborate remotely, including video calls, file sharing, and task tracking.",
+    teamCount: 4,
+    image: "/image-placeholder.webp?height=200&width=400",
+  },
 ]
 
 export default function Project() {

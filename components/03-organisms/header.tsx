@@ -18,14 +18,14 @@ export function Header() {
     <header className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="font-bold text-3xl text-primary">
+        <Link href="/" className="font-bold text-3xl text-primary no-underline">
           Logo
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           {navigationItems.map((item) => (
-            <Link key={item.title} href={item.href} className="hover:text-primary">
+            <Link key={item.title} href={item.href} className="text-md font-medium text-muted-foreground hover:text-primary no-underline">
               {item.title}
             </Link>
           ))}
@@ -47,7 +47,7 @@ export function Header() {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="text-lg font-medium hover:text-primary transition-colors"
+                  className="text-lg font-medium text-primary hover:text-primary no-underline transition-colors"
                   onClick={() => setIsOpen(false)} // Close sheet on link click
                 >
                   {item.title}

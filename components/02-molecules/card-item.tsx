@@ -18,12 +18,12 @@ export function CardItem({ id, title, description, teamCount, image }: CardItemP
   const router = useRouter()
 
   const handleViewProject = () => {
-    router.push(`/project/${id}`)
+    router.push(`/project/todo`)
   }
 
   return (
     <Card
-      className="flex flex-col h-full transition-all duration-300 hover:shadow-xl group cursor-pointer"
+      className="flex flex-col h-full text-primary transition-all duration-300 hover:shadow-xl group cursor-pointer"
       onClick={handleViewProject}
       tabIndex={0}
       role="button"
@@ -50,8 +50,8 @@ export function CardItem({ id, title, description, teamCount, image }: CardItemP
           <span>{teamCount} Members</span>
         </div>
       </CardHeader>
-      <CardFooter>
-        <Button className="w-full cursor-pointer text-md">
+      <CardFooter className="mt-auto">
+        <Button className="w-full cursor-pointer bg-primary text-md">
           View
         </Button>
       </CardFooter>
