@@ -1,5 +1,3 @@
-// app/project/todo/page.tsx
-
 import Image from "next/image";
 import { gql } from "urql";
 import { getClient } from "@/utils/client";
@@ -8,7 +6,6 @@ const GET_PROJECT_DATA = gql`
   query GetProjectData {
     nodeProjects(first: 1) {
       nodes {
-        title
         durations
         body {
           value
@@ -16,14 +13,15 @@ const GET_PROJECT_DATA = gql`
         defaultImage {
           url
         }
-        team {
+        title
+        projectTeam {
           ... on TermTeam {
             id
             name
-            designation
             employeeImage {
               url
             }
+            email
           }
         }
       }
@@ -41,7 +39,8 @@ export default async function Page() {
     url: process.env.DRUPAL_GRAPHQL_URI!,
   });
 
-  const { data, error } = await client.query(GET_PROJECT_DATA, {});
+  const { data, error } = await client.query(GET_PROJECT_DATA, {}, { requestPolicy: "network-only" });
+  console.log(data, 'data');
 
   if (error) {
     return <div className="text-red-500">Error loading project data.</div>;
@@ -81,34 +80,47 @@ export default async function Page() {
           />
 
           {/* Team Members */}
-          {project.team?.length > 0 && (
+          {project.projectTeam?.length > 0 && (
             <>
               <h2 className="text-2xl font-semibold text-primary mb-5">Our team</h2>
-              <div className="mx-auto grid max-w-7xl gap-20 px-6 lg:px-8 xl:grid-cols-3">
-                <ul role="list" className="grid gap-x-12 gap-y-12 sm:grid-cols-3 sm:gap-y-16 xl:col-span-3 list-none">
-                  {project.team.map((member: any) => (
-                    <li key={member.id}>
-                      <div className="flex items-center gap-x-4">
-                        <Image
-                          src={member.employeeImage?.url || "/avatar.png"}
-                          width={60}
-                          height={60}
-                          alt={member.name}
-                          className="size-16 rounded-full outline-1 -outline-offset-1 outline-black/5"
-                        />
-                        <div>
-                          <h3 className="text-base/7 font-semibold tracking-tight text-gray-900">
-                            {member.name}
-                          </h3>
-                          <p className="text-sm/6 font-semibold text-blue-600">
-                            {member.designation}
-                          </p>
-                        </div>
+              <ul
+                role="list"
+                className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 list-none"
+              >
+                {project.projectTeam.map((member: any) => (
+                  <li key={member.id}>
+                    <div className="flex items-center gap-x-4">
+                      <Image
+                        src={member.employeeImage?.url || "/avatar.png"}
+                        width={60}
+                        height={60}
+                        alt={member.name}
+                        className="size-16 rounded-full outline-1 -outline-offset-1 outline-black/5"
+                      />
+                      <div>
+                        <h3 className="text-base font-semibold tracking-tight text-gray-900">
+                          {member.name}
+                        </h3>
+                        {member.email && (
+                          <p className="text-sm text-gray-500">{member.email}</p>
+                        )}
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Be a Member Button */}
+              {project.projectTeam.length < 3 && (
+                <div className="mt-8 text-center">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 text-white bg-primary hover:bg-primary-dark rounded-lg transition cursor-pointer"
+                  >
+                    Be a Member
+                  </button>
+                </div>
+              )}
             </>
           )}
         </section>
