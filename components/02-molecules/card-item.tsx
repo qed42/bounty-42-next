@@ -1,25 +1,37 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from "next/navigation"
-import { Users } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { Users } from "lucide-react";
 // import Image from "next/image"
 
 interface CardItemProps {
-  id: string
-  title: string
-  description: string
-  image: string
-  teamCount: number
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  teamCount: number;
 }
 
-export function CardItem({ id, title, description, teamCount, image }: CardItemProps) {
-  const router = useRouter()
+export function CardItem({
+  id,
+  title,
+  description,
+  teamCount,
+  image,
+}: CardItemProps) {
+  const router = useRouter();
 
   const handleViewProject = () => {
-    router.push(`/project/todo`)
-  }
+    router.push(`/project/todo`);
+  };
 
   return (
     <Card
@@ -27,7 +39,7 @@ export function CardItem({ id, title, description, teamCount, image }: CardItemP
       onClick={handleViewProject}
       tabIndex={0}
       role="button"
-      onKeyDown={e => {
+      onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") handleViewProject();
       }}
     >
@@ -44,17 +56,17 @@ export function CardItem({ id, title, description, teamCount, image }: CardItemP
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardFooter className="mt-auto flex flex-col items-start gap-2">
         {/* Team Count */}
         <div className="flex items-center text-sm text-muted-foreground mt-2">
           <Users className="h-4 w-4 mr-1" />
           <span>{teamCount} Members</span>
         </div>
-      </CardHeader>
-      <CardFooter className="mt-auto">
         <Button className="w-full cursor-pointer bg-primary text-md">
           View
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
