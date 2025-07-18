@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Menu } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import Image from "next/image"
 
 const navigationItems = [
   { title: "Home", href: "/" },
@@ -15,17 +16,23 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-muted">
+      <div className="container mx-auto px-4 min-h-20 h-auto flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="font-bold text-3xl text-primary no-underline">
-          Logo
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/QED42 logo.svg"
+            alt="Logo"
+            width={150}
+            height={50}
+            className="inline-block mr-2"
+          />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           {navigationItems.map((item) => (
-            <Link key={item.title} href={item.href} className="text-md font-medium text-muted-foreground hover:text-primary no-underline">
+            <Link key={item.title} href={item.href} className="text-18 font-medium text-foreground hover:text-primary no-underline">
               {item.title}
             </Link>
           ))}
@@ -35,7 +42,7 @@ export function Header() {
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
+              <Menu className="h-8 w-8" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>

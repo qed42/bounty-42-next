@@ -6,6 +6,7 @@ interface Card {
   description: string
   teamCount: number
   image: string
+  link: string
 }
 
 interface CardsSectionProps {
@@ -33,6 +34,7 @@ export function CardsSection({ title, description, cards }: CardsSectionProps) {
             description={card.description}
             teamCount={card.teamCount}
             image={card.image}
+            link={card.link}  // Assuming link is part of the card object
           />
         ))}
       </div>

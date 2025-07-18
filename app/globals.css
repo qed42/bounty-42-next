@@ -233,4 +233,8 @@
   .text-primary {
     @apply text-primary;
   }
+
+  .text-18 {
+    @apply text-[18px];
+  }
 }

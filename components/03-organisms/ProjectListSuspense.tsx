@@ -14,7 +14,7 @@ export default function ProjectListSkeleton() {
             key={idx}
             className="flex flex-col bg-muted rounded-lg shadow  space-y-4"
           >
-            <div className="h-60 w-full bg-ring rounded mb-4" />
+            <div className="h-60 w-full bg-border rounded mb-4" />
             <div className="h-4 w-2/3 bg-muted rounded" />
             <div className="h-6 w-1/2 bg-muted rounded" />
           </div>
