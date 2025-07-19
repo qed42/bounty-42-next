@@ -10,32 +10,29 @@ import {
 } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Users } from "lucide-react";
-// import Image from "next/image"
+import Image from "next/image"
 
 interface CardItemProps {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  teamCount: number;
+  id: string
+  title: string
+  description: string
+  image: string
+  teamCount: number
+  link: string
 }
 
-export function CardItem({
-  id,
-  title,
-  description,
-  teamCount,
-  image,
-}: CardItemProps) {
-  const router = useRouter();
+export function CardItem({ id, title, description, teamCount, image, link }: CardItemProps) {
+  // export function CardItem({ id, title, image, link }: CardItemProps) {
+  const router = useRouter()
 
   const handleViewProject = () => {
-    router.push(`/project/todo`);
-  };
+    const target = link && link !== "#" ? link : `/project/${link}`;
+    router.push(target);
+  }
 
   return (
     <Card
-      className="flex flex-col h-full text-primary transition-all duration-300 hover:shadow-xl group cursor-pointer"
+      className="flex flex-col h-full text-primary transition-all duration-300 hover:shadow-xl group cursor-pointer pt-0"
       onClick={handleViewProject}
       tabIndex={0}
       role="button"
@@ -43,8 +40,7 @@ export function CardItem({
         if (e.key === "Enter" || e.key === " ") handleViewProject();
       }}
     >
-      {/* Image commented out for now, can be uncommented if needed
-
+      {/* Card Image */}
       <div className="relative w-full h-56 overflow-hidden rounded-t-lg">
         <Image
           src={image || "/image-placeholder.webp"}
@@ -52,17 +48,19 @@ export function CardItem({
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-      </div> */}
+      </div>
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter className="mt-auto flex flex-col items-start gap-2">
         {/* Team Count */}
         <div className="flex items-center text-sm text-muted-foreground mt-2">
           <Users className="h-4 w-4 mr-1" />
-          <span>{teamCount} Members</span>
+          <span>
+            {teamCount} Member{teamCount > 1 ? 's' : ''}
+          </span>
         </div>
+      </CardHeader>
+      <CardFooter className="mt-auto flex flex-col items-start gap-2">
         <Button className="w-full cursor-pointer bg-primary text-md">
           View
         </Button>

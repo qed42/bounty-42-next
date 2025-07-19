@@ -1,35 +1,22 @@
-import Image from "next/image";
-import { gql } from "urql";
 import { getClient } from "@/utils/client";
+import { notFound } from "next/navigation";
+import { GET_PROJECTS } from "@/lib/queries/getData";
+import Image from "next/image";
 
-const GET_PROJECT_DATA = gql`
-  query GetProjectData {
-    nodeProjects(first: 1) {
-      nodes {
-        durations
-        body {
-          value
-        }
-        defaultImage {
-          url
-        }
-        title
-        projectTeam {
-          ... on TermTeam {
-            id
-            name
-            employeeImage {
-              url
-            }
-            email
-          }
-        }
-      }
-    }
-  }
-`;
+// TypeScript type for a project node
+type ProjectNode = {
+  id: string;
+  title: string;
+  durations?: string;
+  body?: { value?: string };
+  path: string,
+  defaultImage?: { url?: string };
+  projectTeam?: Array<{ email: string; name: string; employeeImage: { url: string } }> | null;
+};
 
-export default async function Page() {
+export default async function ProjectDetailPage({ params }: { params: { slug: string[] } }) {
+  const paramsValue = await params;
+
   const client = await getClient({
     auth: {
       uri: process.env.DRUPAL_AUTH_URI!,
@@ -39,30 +26,32 @@ export default async function Page() {
     url: process.env.DRUPAL_GRAPHQL_URI!,
   });
 
-  const { data, error } = await client.query(
-    GET_PROJECT_DATA,
-    {},
-    { requestPolicy: "network-only" }
-  );
+  const { data, error } = await client.query(GET_PROJECTS, {});
 
-  if (error) {
-    return <div className="text-red-500">Error loading project data.</div>;
+  if (error || !data?.nodeProjects?.edges) {
+    notFound();
   }
 
-  const project = data?.nodeProjects?.nodes?.[0];
+  // Await params if needed (for Next.js dynamic route)
+  const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
+  const currentPath = `/project/${slug}`;
+  const project = data.nodeProjects.edges
+    .map((edge: { node: ProjectNode & { path: string } }) => edge.node)
+    .find((node: ProjectNode & { path: string }) => node.path === currentPath);
 
   if (!project) {
-    return <div className="text-gray-500">No project data found.</div>;
+    notFound();
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-12 lg:py-20">
       {/* Title and Duration */}
       <div className="mb-5">
         <h1 className="text-4xl font-bold text-primary">{project.title}</h1>
         <small className="text-gray-400">({project.durations})</small>
       </div>
 
+      {/* Project Content */}
       <div className="bg-white shadow-xl rounded-2xl space-y-6">
         {/* Project Image */}
         <div className="relative w-full h-64">
@@ -70,8 +59,7 @@ export default async function Page() {
             src={project.defaultImage?.url || "/bg.jpg"}
             alt="Project preview"
             fill
-            sizes="(max-width: 768px) 100vw, 700px"
-            className="object-cover rounded-t-2xl"
+            className="w-full h-64 object-cover"
           />
         </div>
 
@@ -85,14 +73,17 @@ export default async function Page() {
           {/* Team Members */}
           {project.projectTeam?.length > 0 && (
             <>
-              <h2 className="text-2xl font-semibold text-primary mb-5">
-                Our team
-              </h2>
+              <h2 className="text-2xl font-semibold text-primary mb-5">Our team</h2>
               <ul
                 role="list"
                 className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 list-none"
               >
-                {project.projectTeam.map((member: any) => (
+                {project.projectTeam.map((member: {
+                    id: string;
+                    name: string;
+                    email: string;
+                    employeeImage?: { url?: string };
+                  }) => (
                   <li key={member.id}>
                     <div className="flex items-center gap-x-4">
                       <Image
@@ -107,9 +98,7 @@ export default async function Page() {
                           {member.name}
                         </h3>
                         {member.email && (
-                          <p className="text-sm text-gray-500">
-                            {member.email}
-                          </p>
+                          <p className="text-sm text-gray-500">{member.email}</p>
                         )}
                       </div>
                     </div>

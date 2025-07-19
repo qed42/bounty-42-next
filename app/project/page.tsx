@@ -1,76 +1,54 @@
-import { CardsSection } from "@/components/03-organisms/cards-section"
+// app/project/page.tsx
+
 import { Suspense } from "react";
+import { CardsSection } from "@/components/03-organisms/cards-section";
 import ProjectListSkeleton from "@/components/03-organisms/ProjectListSuspense";
+import { getClient } from "@/utils/client";
+import { GET_PROJECTS } from "@/lib/queries/getData";
 
-const sampleCards = [
-  {
-    id: "1",
-    title: "Portfolio Website",
-    description: "A personal portfolio site built to showcase skills, projects, and experience using modern frameworks.",
-    teamCount: 2,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "2",
-    title: "E-commerce App",
-    description: "A complete online shopping platform with secure payment gateway and mobile-friendly UI.",
-    teamCount: 2,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "3",
-    title: "Design System",
-    description: "A custom design system created for a consistent and scalable product UI across platforms.",
-    teamCount: 3,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "4",
-    title: "Cloud Migration",
-    description: "Successfully migrated legacy infrastructure to a modern cloud-native solution for better scalability.",
-    teamCount: 2,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "5",
-    title: "Data Dashboard",
-    description: "Interactive analytics dashboard for visualizing business KPIs using real-time data.",
-    teamCount: 1,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "6",
-    title: "AI Chatbot",
-    description: "A conversational chatbot built with NLP to assist users and automate customer support.",
-    teamCount: 2,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "7",
-    title: "Event Management Tool",
-    description: "An all-in-one platform to create, promote, and manage events with real-time attendee tracking.",
-    teamCount: 3,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-  {
-    id: "8",
-    title: "Remote Collaboration Suite",
-    description: "A toolkit for teams to collaborate remotely, including video calls, file sharing, and task tracking.",
-    teamCount: 4,
-    image: "/image-placeholder.webp?height=200&width=400",
-  },
-]
+export default async function ProjectListingPage() {
+  const client = await getClient({
+    auth: {
+      uri: process.env.DRUPAL_AUTH_URI!,
+      clientId: process.env.DRUPAL_CLIENT_ID!,
+      clientSecret: process.env.DRUPAL_CLIENT_SECRET!,
+    },
+    url: process.env.DRUPAL_GRAPHQL_URI!,
+  });
 
-export default function Project() {
+  const { data, error } = await client.query(GET_PROJECTS, {});
+
+  if (error || !data?.nodeProjects?.edges) {
+    throw new Error("Failed to fetch project listings");
+  }
+
+  type ProjectNode = {
+    id: string;
+    title: string;
+    body?: { summary?: string } | null;
+    defaultImage?: { url?: string };
+    path: string,
+    projectTeam?: Array<{ email: string; name: string; employeeImage: { url: string } }> | null;
+  };
+
+  const cards = data.nodeProjects.edges.map(({ node }: { node: ProjectNode }) => ({
+    id: node.id ?? "0",
+    title: node.title ?? "Project Title",
+    description: node.body?.summary ?? "A brief project description goes here.",
+    image: node.defaultImage?.url ?? "/image-placeholder.webp?height=200&width=400",
+    link: node.path ?? "#",
+    teamCount: Array.isArray(node.projectTeam) ? node.projectTeam.length : 0,
+  }));
+
   return (
     <div className="min-h-screen bg-background">
       <Suspense fallback={<ProjectListSkeleton />}>
         <CardsSection
           title="Our Projects"
           description="Explore some of our most impactful and innovative projects that solve real-world problems and deliver results."
-          cards={sampleCards}
+          cards={cards}
         />
       </Suspense>
     </div>
-  )
+  );
 }
