@@ -14,8 +14,9 @@ export const users = pgTable('users', {
 
 export const projects = pgTable('projects', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
+  title: text('title').notNull(),
   description: text('description'),
+  slug: text('slug').notNull().unique(), 
   duration: integer('duration'),
   prize: numeric('prize'),
 })

@@ -3,7 +3,8 @@ import { projects, projectTeam } from "@/db/schema";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { name, description, duration, prize, userIds } = await req.json();
+  const { title, description, duration, prize, userIds } =
+    await req.json();
 
   if (!userIds || userIds.length < 1 || userIds.length > 3) {
     return NextResponse.json(
@@ -12,11 +13,17 @@ export async function POST(req: Request) {
     );
   }
 
+  const path = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
   const [project] = await db
     .insert(projects)
     .values({
-      name,
+      title,
       description,
+      slug: path,
       duration,
       prize,
     })
