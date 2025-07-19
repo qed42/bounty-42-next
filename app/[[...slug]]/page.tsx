@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getClient } from "@/utils/client";
 import { gql } from "urql";
 import { calculatePath } from "@/utils/calculate-path";
+import AuthGuard from "@/components/AuthGuard";
 
 async function getDrupalData({
   params,
@@ -122,27 +123,31 @@ export default async function Page({
   params: { slug: string[] };
   searchParams: Promise<Record<string, string>>;
 }) {
-  
-  const { node } = await getDrupalData({ params, searchParams: await searchParams });
+  const { node } = await getDrupalData({
+    params,
+    searchParams: await searchParams,
+  });
 
   return (
-    <div className="container mx-auto">
-      <h1 className="text-6xl font-bold tracking-tighter leading-none mb-6 text-left">
-        {node.title}
-      </h1>
-      {node.image && (
-        <Image
-          src={node.image.url}
-          alt={node.image.alt}
-          width={node.image.width}
-          height={node.image.height}
-          className="mb-6 mx-auto max-w-lg"
+    <AuthGuard>
+      <div className="container mx-auto">
+        <h1 className="text-6xl font-bold tracking-tighter leading-none mb-6 text-left">
+          {node.title}
+        </h1>
+        {node.image && (
+          <Image
+            src={node.image.url}
+            alt={node.image.alt}
+            width={node.image.width}
+            height={node.image.height}
+            className="mb-6 mx-auto max-w-lg"
+          />
+        )}
+        <div
+          className="max-w-sm lg:max-w-4xl mx-auto text-lg"
+          dangerouslySetInnerHTML={{ __html: node.body.value }}
         />
-      )}
-      <div
-        className="max-w-sm lg:max-w-4xl mx-auto text-lg"
-        dangerouslySetInnerHTML={{ __html: node.body.value }}
-      />
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

@@ -16,12 +16,12 @@ interface CardItemProps {
   id: string
   title: string
   description: string
-  image: string
+  image?: string
   teamCount: number
   link: string
 }
 
-export function CardItem({ id, title, description, teamCount, image, link }: CardItemProps) {
+export function CardItem({ title, description, teamCount, image, link }: CardItemProps) {
   // export function CardItem({ id, title, image, link }: CardItemProps) {
   const router = useRouter()
 
