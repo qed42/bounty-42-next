@@ -39,7 +39,11 @@ export default async function Page() {
     url: process.env.DRUPAL_GRAPHQL_URI!,
   });
 
-  const { data, error } = await client.query(GET_PROJECT_DATA, {}, { requestPolicy: "network-only" });
+  const { data, error } = await client.query(
+    GET_PROJECT_DATA,
+    {},
+    { requestPolicy: "network-only" }
+  );
 
   if (error) {
     return <div className="text-red-500">Error loading project data.</div>;
@@ -59,7 +63,6 @@ export default async function Page() {
         <small className="text-gray-400">({project.durations})</small>
       </div>
 
-      {/* Project Content */}
       <div className="bg-white shadow-xl rounded-2xl space-y-6">
         {/* Project Image */}
         <div className="relative w-full h-64">
@@ -67,7 +70,8 @@ export default async function Page() {
             src={project.defaultImage?.url || "/bg.jpg"}
             alt="Project preview"
             fill
-            className="w-full h-64 object-cover"
+            sizes="(max-width: 768px) 100vw, 700px"
+            className="object-cover rounded-t-2xl"
           />
         </div>
 
@@ -81,7 +85,9 @@ export default async function Page() {
           {/* Team Members */}
           {project.projectTeam?.length > 0 && (
             <>
-              <h2 className="text-2xl font-semibold text-primary mb-5">Our team</h2>
+              <h2 className="text-2xl font-semibold text-primary mb-5">
+                Our team
+              </h2>
               <ul
                 role="list"
                 className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 list-none"
@@ -101,7 +107,9 @@ export default async function Page() {
                           {member.name}
                         </h3>
                         {member.email && (
-                          <p className="text-sm text-gray-500">{member.email}</p>
+                          <p className="text-sm text-gray-500">
+                            {member.email}
+                          </p>
                         )}
                       </div>
                     </div>

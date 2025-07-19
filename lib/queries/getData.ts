@@ -7,12 +7,12 @@ export const GET_PROJECTS = gql`
       edges {
         node {
           id
+          title
           durations
           body {
             summary
             value
           }
-          title
           path
           defaultImage {
             url
@@ -35,6 +35,17 @@ export const GET_PROJECTS = gql`
       pageInfo {
         endCursor
         hasNextPage
+      }
+    }
+  }
+`;
+
+export const GET_MAIN_MENU = gql`
+  query GetMenu {
+    menu(name: MAIN) {
+      items {
+        title
+        url
       }
     }
   }

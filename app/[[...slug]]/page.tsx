@@ -35,13 +35,6 @@ async function getDrupalData({
                 __typename
                 title
                 path
-                image {
-                  url
-                  alt
-                }
-                body {
-                  value
-                }
                 metatag {
                   __typename
                   ... on MetaTagLink {

@@ -124,6 +124,3 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
     </div>
   );
 }
-
-
-
