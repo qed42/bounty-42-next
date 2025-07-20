@@ -2,7 +2,6 @@ import {
   pgTable,
   uuid,
   text,
-  integer,
   numeric
 } from 'drizzle-orm/pg-core'
 
@@ -17,7 +16,7 @@ export const projects = pgTable('projects', {
   title: text('title').notNull(),
   description: text('description'),
   slug: text('slug').notNull().unique(), 
-  duration: integer('duration'),
+  duration: text('duration'),
   prize: numeric('prize'),
 })
 
