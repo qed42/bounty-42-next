@@ -1,19 +1,26 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet" // Import SheetTitle
-import { Menu } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
-import Image from "next/image"
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet"; // Import SheetTitle
+import { LogOut, Menu } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import Image from "next/image";
+import { signOut, useSession } from "next-auth/react";
 
 const navigationItems = [
   { title: "Home", href: "/" },
   { title: "Projects", href: "/project" },
-]
+];
 
 export function Header() {
-  const [isOpen, setIsOpen] = useState(false)
+  const { data: session } = useSession();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-muted">
@@ -32,10 +39,23 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           {navigationItems.map((item) => (
-            <Link key={item.title} href={item.href} className="text-18 font-medium text-foreground hover:text-primary no-underline">
+            <Link
+              key={item.title}
+              href={item.href}
+              className="text-18 font-medium text-foreground hover:text-primary no-underline"
+            >
               {item.title}
             </Link>
           ))}
+          {session && (
+            <button
+              onClick={() => signOut()}
+              className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Sign out</span>
+            </button>
+          )}
         </nav>
 
         {/* Mobile Navigation */}
@@ -60,10 +80,20 @@ export function Header() {
                   {item.title}
                 </Link>
               ))}
+
+              {session && (
+                <button
+                  onClick={() => signOut()}
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Sign out</span>
+                </button>
+              )}
             </div>
           </SheetContent>
         </Sheet>
       </div>
     </header>
-  )
+  );
 }
