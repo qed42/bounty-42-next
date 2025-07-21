@@ -92,7 +92,12 @@ export default async function Page() {
                 role="list"
                 className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 list-none"
               >
-                {project.projectTeam.map((member: any) => (
+                {project.projectTeam.map((member: {
+                    id: string;
+                    name: string;
+                    email: string;
+                    employeeImage?: { url?: string };
+                  }) => (
                   <li key={member.id}>
                     <div className="flex items-center gap-x-4">
                       <Image

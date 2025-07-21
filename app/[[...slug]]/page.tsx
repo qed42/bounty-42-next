@@ -5,17 +5,19 @@ import { getClient } from "@/utils/client";
 import { gql } from "urql";
 import { calculatePath } from "@/utils/calculate-path";
 
-async function getDrupalData({
-  params,
-  searchParams,
-}: {
-  params: { slug: string[] };
-  searchParams: Record<string, string>;
-}) {
+interface PageProps {
+  params: Promise<{ slug: string[] }>;
+  searchParams: Promise<Record<string, string>>;
+}
+
+async function getDrupalData({ params, searchParams }: PageProps) {
   const GET_DRUPAL_CONTENT_ERROR = "Error fetching data from Drupal";
 
-  const paramsValue = await params;
-  const pathFromParams = await paramsValue.slug?.join("/");
+  // const paramsValue = await params;
+  const { slug } = await params;
+  const pathFromParams = slug?.join("/");
+  const searchParamsValue = await searchParams; // Await the searchParams promise
+  const token = searchParamsValue.token;
 
   const drupalClient = await getClient({
     auth: {
@@ -99,7 +101,7 @@ async function getDrupalData({
     {
       path: calculatePath({
         path: pathFromParams,
-        token: searchParams?.token,
+        token: token,
       }),
     }
   );
@@ -119,11 +121,11 @@ export default async function Page({
   params,
   searchParams,
 }: {
-  params: { slug: string[] };
+  params: Promise<{ slug: string[] }>;
   searchParams: Promise<Record<string, string>>;
 }) {
   
-  const { node } = await getDrupalData({ params, searchParams: await searchParams });
+  const { node } = await getDrupalData({ params, searchParams });
 
   return (
     <div className="container mx-auto">

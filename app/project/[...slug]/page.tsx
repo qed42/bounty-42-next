@@ -5,12 +5,17 @@ import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
 import Image from "next/image";
 import { getGraphQLClient } from '@/utils/getGraphQLClient'
 
-export default async function ProjectDetailPage({ params }: { params: { slug: string[] } }) {
-  const paramsValue = await params;
+interface PageProps {
+  params: Promise<{ slug: string[] }>; // Changed to Promise
+}
+
+export default async function ProjectDetailPage({ params }: PageProps) {
+  const { slug } = await params;
 
   const client = await getGraphQLClient();
 
-  const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
+  // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
+  // const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const currentPath = `/project/${slug}`;
   const { data, error } = await client.query(GET_PROJECT_BY_PATH, {
     path: currentPath,
