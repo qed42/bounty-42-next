@@ -5,7 +5,7 @@ interface Card {
   title: string
   description: string
   teamCount: number
-  image: string
+  image?: string
   link: string
 }
 
