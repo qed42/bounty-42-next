@@ -1,43 +1,26 @@
-import { getClient } from "@/utils/client";
-import { notFound } from "next/navigation";
-import { GET_PROJECTS } from "@/lib/queries/getData";
-import Image from "next/image";
+// app/project/[slug]/page.tsx
 
-// TypeScript type for a project node
-type ProjectNode = {
-  id: string;
-  title: string;
-  durations?: string;
-  body?: { value?: string };
-  path: string,
-  defaultImage?: { url?: string };
-  projectTeam?: Array<{ email: string; name: string; employeeImage: { url: string } }> | null;
-};
+import { notFound } from "next/navigation";
+import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
+import Image from "next/image";
+import { getGraphQLClient } from '@/utils/getGraphQLClient'
 
 export default async function ProjectDetailPage({ params }: { params: { slug: string[] } }) {
   const paramsValue = await params;
 
-  const client = await getClient({
-    auth: {
-      uri: process.env.DRUPAL_AUTH_URI!,
-      clientId: process.env.DRUPAL_CLIENT_ID!,
-      clientSecret: process.env.DRUPAL_CLIENT_SECRET!,
-    },
-    url: process.env.DRUPAL_GRAPHQL_URI!,
-  });
+  const client = await getGraphQLClient();
 
-  const { data, error } = await client.query(GET_PROJECTS, {});
-
-  if (error || !data?.nodeProjects?.edges) {
-    notFound();
-  }
-
-  // Await params if needed (for Next.js dynamic route)
   const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
   const currentPath = `/project/${slug}`;
-  const project = data.nodeProjects.edges
-    .map((edge: { node: ProjectNode & { path: string } }) => edge.node)
-    .find((node: ProjectNode & { path: string }) => node.path === currentPath);
+  const { data, error } = await client.query(GET_PROJECT_BY_PATH, {
+    path: currentPath,
+  });
+
+  if (error || !data?.route?.entity) {
+    notFound();
+  }
+  
+  const project = data.route.entity;
 
   if (!project) {
     notFound();

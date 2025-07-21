@@ -2,31 +2,33 @@
 import { gql } from "urql";
 
 export const GET_PROJECTS = gql`
-  query GetProjects {
-    nodeProjects(first: 10, after: null) {
+  query GetProjects($first :Int, $after : Cursor) {
+    nodeProjects(first: $first, after: $after) {
       edges {
         node {
           id
-          title
           durations
           body {
             summary
             value
           }
+          title
           path
           defaultImage {
             url
-            alt
             title
+            alt
           }
           projectTeam {
             ... on TermTeam {
-              id
-              name
               employeeImage {
                 url
+                alt
+                title
               }
+              name
               email
+              id
             }
           }
         }
@@ -40,12 +42,43 @@ export const GET_PROJECTS = gql`
   }
 `;
 
-export const GET_MAIN_MENU = gql`
-  query GetMenu {
-    menu(name: MAIN) {
-      items {
-        title
+export const GET_PROJECT_BY_PATH = gql`
+  query GetProjectByPath($path: String!) {
+    route(path: $path) {
+      ... on RouteInternal {
+        entity {
+          ... on NodeProject {
+            id
+            title
+            durations
+            path
+            body {
+              summary
+              value
+            }
+            defaultImage {
+              url
+              title
+              alt
+            }
+            projectTeam {
+              ... on TermTeam {
+                id
+                name
+                email
+                employeeImage {
+                  url
+                  alt
+                  title
+                }
+              }
+            }
+          }
+        }
+      }
+      ... on RouteRedirect {
         url
+        status
       }
     }
   }
