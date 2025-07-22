@@ -1,5 +1,3 @@
-// app/project/[slug]/page.tsx
-
 import { notFound } from "next/navigation";
 import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
 import Image from "next/image";
@@ -12,7 +10,6 @@ interface PageProps {
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
-
   const client = await getGraphQLClient();
 
   // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
@@ -36,6 +33,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   //   project.projectTeam.filter(
   //     (member: ProjectTeamMember) => member.email === "ruturaj@qed42.com"
   //   );
+
+  const canUserBeAddedProject =
+    project.projectTeam == null || project.projectTeam.length < 3;
+
 
   return (
     <div className="container mx-auto px-4 py-12 lg:py-20">
@@ -105,17 +106,17 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   )
                 )}
               </ul>
-
-              {/* Be a Member Button */}
-              {project.projectTeam.length < 3 && (
-                <div className="mt-8 text-center">
-                  <BeAMemberButton
-                    projectSlug={project.id}
-                    userEmail="ruturaj@qed42.com"
-                  />
-                </div>
-              )}
             </>
+          )}
+
+          {/* Be a Member Button */}
+          {canUserBeAddedProject && (
+            <div className="mt-8 text-center">
+              <BeAMemberButton
+                project={project}
+                userEmail="ruturaj@qed42.com"
+              />
+            </div>
           )}
         </section>
       </div>

@@ -1,15 +1,16 @@
 "use client";
 
-import { addUserToProject } from "@/lib/queries/updateData";
 import { useState } from "react";
+import { addUserToProject } from "@/lib/queries/updateData";
+import { ProjectNode } from "@/types/project";
 
 interface AddUserButtonProps {
-  projectSlug: string;
+  project: ProjectNode;
   userEmail: string;
 }
 
 export default function BeAMemberButton({
-  projectSlug,
+  project,
   userEmail,
 }: AddUserButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +21,11 @@ export default function BeAMemberButton({
     setMessage("");
 
     try {
-      const response = await addUserToProject(projectSlug, userEmail);
+      const response = await addUserToProject(project, userEmail);
       const result = await response;
 
       if (result.termAdded) {
-        setMessage("Successfully joined the project!");
+        setMessage(result.message || "Successfully joined the project!");
         setTimeout(() => {
           window.location.reload();
         }, 1500);
