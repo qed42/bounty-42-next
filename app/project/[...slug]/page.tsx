@@ -6,6 +6,7 @@ import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
 import { getServerSession } from "next-auth";
 import AuthGuard from "@/components/AuthGuard";
 import { authOptions } from "@/lib/authOptions";
+import { Clock, Tag } from "lucide-react"
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -47,13 +48,37 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         {/* Title and Duration */}
         <div className="mb-5">
           <h1 className="text-4xl font-bold text-primary">{project.title}</h1>
-          <small className="text-gray-400">({project.durations})</small>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-black">
+          <div className="flex items-center gap-2 text-lg">
+            <Clock className="w-5 h-5" />
+            <span>{project.durations}</span>
+          </div>
+          <div className="flex items-center gap-2 text-lg">
+            <Tag className="w-5 h-5" />
+            <div className="text-base px-0 py-1">
+              {/* Category */}
+              <div
+                className={`project-category w-max ${
+                  project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool1'
+                    ? 'project-category--1'
+                    : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool2'
+                    ? 'project-category--2'
+                    : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool3'
+                    ? 'project-category--3'
+                    : 'text-black'
+                }`}
+              >
+                {project.category.name}
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
 
         {/* Project Content */}
         <div className="bg-white shadow-xl rounded-2xl space-y-6">
           {/* Project Image */}
-          <div className="relative w-full h-64">
+          <div className="relative w-full h-96">
             <Image
               src={project.defaultImage?.url || "/bg.jpg"}
               alt="Project preview"

@@ -12,6 +12,12 @@ export const GET_PROJECTS = gql`
             summary
             value
           }
+          category {
+            ... on TermCategory {
+              id
+              name
+            }
+          }
           title
           path
           defaultImage {
@@ -57,6 +63,12 @@ export const GET_PROJECT_BY_PATH = gql`
               value
             }
             reward
+            category {
+              ... on TermCategory {
+                id
+                name
+              }
+            }
             defaultImage {
               url
               title

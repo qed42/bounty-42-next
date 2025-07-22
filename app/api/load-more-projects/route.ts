@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
     image: node.defaultImage?.url ?? "/image-placeholder.webp",
     link: node.path,
     teamCount: Array.isArray(node.projectTeam) ? node.projectTeam.length : 0,
+    category: node.category?.name || "Uncategorized",
   }));
 
   return NextResponse.json({
