@@ -18,8 +18,6 @@ export async function addUserToProject(
 
   let term = response[0];
 
-  console.log(`TERM`, term)
-
   if (!term) {
     if (!termName?.trim() && !termEmail?.trim()) {
       return {
