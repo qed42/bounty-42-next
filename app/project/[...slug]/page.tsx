@@ -1,9 +1,8 @@
-// app/project/[slug]/page.tsx
-
 import { notFound } from "next/navigation";
 import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
 import Image from "next/image";
-import { getGraphQLClient } from '@/utils/getGraphQLClient'
+import { getGraphQLClient } from "@/utils/getGraphQLClient";
+import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -11,7 +10,6 @@ interface PageProps {
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
-
   const client = await getGraphQLClient();
 
   // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
@@ -24,12 +22,21 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   if (error || !data?.route?.entity) {
     notFound();
   }
-  
+
   const project = data.route.entity;
 
   if (!project) {
     notFound();
   }
+
+  // const isUserAlreadyInProject: ProjectTeamMember[] =
+  //   project.projectTeam.filter(
+  //     (member: ProjectTeamMember) => member.email === "ruturaj@qed42.com"
+  //   );
+
+  const canUserBeAddedProject =
+    project.projectTeam == null || project.projectTeam.length < 3;
+
 
   return (
     <div className="container mx-auto px-4 py-12 lg:py-20">
@@ -61,51 +68,55 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           {/* Team Members */}
           {project.projectTeam?.length > 0 && (
             <>
-              <h2 className="text-2xl font-semibold text-primary mb-5">Our team</h2>
+              <h2 className="text-2xl font-semibold text-primary mb-5">
+                Our team
+              </h2>
               <ul
                 role="list"
                 className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 list-none"
               >
-                {project.projectTeam.map((member: {
+                {project.projectTeam.map(
+                  (member: {
                     id: string;
                     name: string;
                     email: string;
                     employeeImage?: { url?: string };
                   }) => (
-                  <li key={member.id}>
-                    <div className="flex items-center gap-x-4">
-                      <Image
-                        src={member.employeeImage?.url || "/avatar.png"}
-                        width={60}
-                        height={60}
-                        alt={member.name}
-                        className="size-16 rounded-full outline-1 -outline-offset-1 outline-black/5"
-                      />
-                      <div>
-                        <h3 className="text-base font-semibold tracking-tight text-gray-900">
-                          {member.name}
-                        </h3>
-                        {member.email && (
-                          <p className="text-sm text-gray-500">{member.email}</p>
-                        )}
+                    <li key={member.id}>
+                      <div className="flex items-center gap-x-4">
+                        <Image
+                          src={member.employeeImage?.url || "/avatar.png"}
+                          width={60}
+                          height={60}
+                          alt={member.name}
+                          className="size-16 rounded-full outline-1 -outline-offset-1 outline-black/5"
+                        />
+                        <div>
+                          <h3 className="text-base font-semibold tracking-tight text-gray-900">
+                            {member.name}
+                          </h3>
+                          {member.email && (
+                            <p className="text-sm text-gray-500">
+                              {member.email}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  )
+                )}
               </ul>
-
-              {/* Be a Member Button */}
-              {project.projectTeam.length < 3 && (
-                <div className="mt-8 text-center">
-                  <button
-                    type="submit"
-                    className="px-6 py-2 text-white bg-primary hover:bg-primary-dark rounded-lg transition cursor-pointer"
-                  >
-                    Be a Member
-                  </button>
-                </div>
-              )}
             </>
+          )}
+
+          {/* Be a Member Button */}
+          {canUserBeAddedProject && (
+            <div className="mt-8 text-center">
+              <BeAMemberButton
+                project={project}
+                userEmail="ruturaj@qed42.com"
+              />
+            </div>
           )}
         </section>
       </div>
