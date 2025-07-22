@@ -3,6 +3,8 @@ import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
 import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -11,6 +13,8 @@ interface PageProps {
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const client = await getGraphQLClient();
+  const session = await getServerSession(authOptions);
+  const user = session?.user;
 
   // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
   // const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -33,10 +37,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   //   project.projectTeam.filter(
   //     (member: ProjectTeamMember) => member.email === "ruturaj@qed42.com"
   //   );
-
   const canUserBeAddedProject =
     project.projectTeam == null || project.projectTeam.length < 3;
-
 
   return (
     <div className="container mx-auto px-4 py-12 lg:py-20">
@@ -114,7 +116,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div className="mt-8 text-center">
               <BeAMemberButton
                 project={project}
-                userEmail="ruturaj@qed42.com"
+                userName={user?.name || ""}
+                userEmail={user?.email || ""}
               />
             </div>
           )}

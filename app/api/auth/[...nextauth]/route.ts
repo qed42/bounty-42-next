@@ -27,9 +27,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       try {
-        console.log(`HEYYEYEYYE`)
+        // await addUserToTeamTaxonomy(profile.email, profile.name);
       } catch (err) {
-        console.error("DB error:", err);
+        console.error("Oauth error:", err);
         return false;
       }
 
