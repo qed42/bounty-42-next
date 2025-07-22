@@ -18,7 +18,7 @@ export default function LoginPage() {
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
               Welcome back!
             </h1>
-            <p className="text-gray-600">You&pos;re successfully signed in</p>
+            <p className="text-gray-600">You&apos;re successfully signed in</p>
           </div>
 
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-6 border border-indigo-100">

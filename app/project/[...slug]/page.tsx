@@ -69,10 +69,22 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
             />
 
+            {/* Reward */}
+            {project.reward && (
+              <>
+                <h2 className="text-3xl font-semibold text-primary">
+                  Rewards Received
+                </h2>
+                <div className="text-lg text-black">
+                  {project.reward}
+                </div>
+              </>
+            )}
+
             {/* Team Members */}
             {project.projectTeam?.length > 0 && (
-              <>
-                <h2 className="text-2xl font-semibold text-primary mb-5">
+              <div className="mt-6 pt-6 border-t border-gray-300">
+                <h2 className="text-3xl font-semibold text-primary mb-5">
                   Our team
                 </h2>
                 <ul
@@ -110,7 +122,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     )
                   )}
                 </ul>
-              </>
+              </div>
             )}
 
             {/* Be a Member Button */}
