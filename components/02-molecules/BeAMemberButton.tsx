@@ -6,11 +6,13 @@ import { ProjectNode } from "@/types/project";
 
 interface AddUserButtonProps {
   project: ProjectNode;
+  userName: string;
   userEmail: string;
 }
 
 export default function BeAMemberButton({
   project,
+  userName,
   userEmail,
 }: AddUserButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function BeAMemberButton({
     setMessage("");
 
     try {
-      const response = await addUserToProject(project, userEmail);
+      const response = await addUserToProject(project, userName, userEmail);
       const result = await response;
 
       if (result.termAdded) {
