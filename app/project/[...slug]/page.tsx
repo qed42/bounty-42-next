@@ -73,7 +73,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             {project.reward && (
               <>
                 <h2 className="text-3xl font-semibold text-primary">
-                  Rewards Received
+                  Reward
                 </h2>
                 <div className="text-lg text-black">
                   {project.reward}
