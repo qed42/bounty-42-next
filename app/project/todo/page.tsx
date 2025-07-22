@@ -10,6 +10,7 @@ const GET_PROJECT_DATA = gql`
         body {
           value
         }
+        reward
         defaultImage {
           url
         }
@@ -82,9 +83,21 @@ export default async function Page() {
             dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
           />
 
+          {/* Reward */}
+          {project.reward && (
+            <>
+              <h2 className="text-3xl font-semibold text-primary">
+                Reward
+              </h2>
+              <div className="text-lg text-black">
+                {project.reward}
+              </div>
+            </>
+          )}
+
           {/* Team Members */}
           {project.projectTeam?.length > 0 && (
-            <>
+            <div className="mt-6 pt-6 border-t border-gray-300">
               <h2 className="text-2xl font-semibold text-primary mb-5">
                 Our team
               </h2>
@@ -133,7 +146,7 @@ export default async function Page() {
                   </button>
                 </div>
               )}
-            </>
+            </div>
           )}
         </section>
       </div>

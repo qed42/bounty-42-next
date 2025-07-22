@@ -56,6 +56,7 @@ export const GET_PROJECT_BY_PATH = gql`
               summary
               value
             }
+            reward
             defaultImage {
               url
               title
