@@ -1,12 +1,13 @@
 // app/project/page.tsx
 
-import { Suspense } from "react"
-import ProjectListSkeleton from "@/components/03-organisms/ProjectListSuspense"
+import { Suspense } from "react";
+import ProjectListSkeleton from "@/components/03-organisms/ProjectListSuspense";
 import { CardsSection } from "@/components/03-organisms/cards-section";
-import { GET_PROJECTS } from "@/lib/queries/getData"
-import { getGraphQLClient } from "@/utils/getGraphQLClient"
+import { GET_PROJECTS } from "@/lib/queries/getData";
+import { getGraphQLClient } from "@/utils/getGraphQLClient";
 // importing types
 import type { ProjectEdge } from "@/types/project";
+import AuthGuard from "@/components/AuthGuard";
 
 export default async function ProjectListingPage() {
   const client = await getGraphQLClient();
@@ -33,15 +34,17 @@ export default async function ProjectListingPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-background">
-      <Suspense fallback={<ProjectListSkeleton />}>
-        <CardsSection
-          title="Our Projects"
-          description="Explore some of our most impactful and innovative projects that solve real-world problems and deliver results."
-          cards={cards}
-          pageInfo={pageInfo}
-        />
-      </Suspense>
-    </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
+        <Suspense fallback={<ProjectListSkeleton />}>
+          <CardsSection
+            title="Our Projects"
+            description="Explore some of our most impactful and innovative projects that solve real-world problems and deliver results."
+            cards={cards}
+            pageInfo={pageInfo}
+          />
+        </Suspense>
+      </div>
+    </AuthGuard>
   );
 }
