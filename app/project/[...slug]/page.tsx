@@ -4,8 +4,8 @@ import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import AuthGuard from "@/components/AuthGuard";
+import { authOptions } from "@/lib/authOptions";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
