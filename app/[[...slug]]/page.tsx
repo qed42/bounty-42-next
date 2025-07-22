@@ -5,6 +5,7 @@ import { getClient } from "@/utils/client";
 import { gql } from "urql";
 import { calculatePath } from "@/utils/calculate-path";
 import AuthGuard from "@/components/AuthGuard";
+import TeamModalForm from "@/components/03-organisms/team-modal-form";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
@@ -133,6 +134,7 @@ export default async function Page({
         <h1 className="text-6xl font-bold tracking-tighter leading-none mb-6 text-left">
           {node.title}
         </h1>
+        <TeamModalForm />
         {node.image && (
           <Image
             src={node.image.url}
