@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
-import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
+import {
+  GET_PROJECT_BY_PATH,
+  getProjectWithTeamMembersById,
+} from "@/lib/queries/getData";
 import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
-import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
-import { getServerSession } from "next-auth";
 import AuthGuard from "@/components/AuthGuard";
-import { authOptions } from "@/lib/authOptions";
-import { Clock, Tag } from "lucide-react"
+import { Clock, Tag } from "lucide-react";
+import TeamModalForm from "@/components/03-organisms/team-modal-form";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -15,8 +16,6 @@ interface PageProps {
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const client = await getGraphQLClient();
-  const session = await getServerSession(authOptions);
-  const user = session?.user;
 
   // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
   // const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -30,17 +29,15 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const project = data.route.entity;
+  const response = await getProjectWithTeamMembersById(project.id);
+  const projectTeams = response?.field_teams ?? [];
 
   if (!project) {
     notFound();
   }
 
-  // const isUserAlreadyInProject: ProjectTeamMember[] =
-  //   project.projectTeam.filter(
-  //     (member: ProjectTeamMember) => member.email === "ruturaj@qed42.com"
-  //   );
   const canUserBeAddedProject =
-    project.projectTeam == null || project.projectTeam.length < 3;
+    project.teams == null || project.teams.length < 3;
 
   return (
     <AuthGuard>
@@ -49,30 +46,35 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         <div className="mb-5">
           <h1 className="text-4xl font-bold text-primary">{project.title}</h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-black">
-          <div className="flex items-center gap-2 text-lg">
-            <Clock className="w-5 h-5" />
-            <span>{project.durations}</span>
-          </div>
-          <div className="flex items-center gap-2 text-lg">
-            <Tag className="w-5 h-5" />
-            <div className="text-base px-0 py-1">
-              {/* Category */}
-              <div
-                className={`project-category w-max ${
-                  project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool1'
-                    ? 'project-category--1'
-                    : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool2'
-                    ? 'project-category--2'
-                    : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool3'
-                    ? 'project-category--3'
-                    : 'text-black'
-                }`}
-              >
-                {project.category.name}
+            <div className="flex items-center gap-2 text-lg">
+              <Clock className="w-5 h-5" />
+              <span>{project.durations}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <Tag className="w-5 h-5" />
+              <div className="text-base px-0 py-1">
+                {/* Category */}
+                <div
+                  className={`project-category w-max ${
+                    project.category.name.toLowerCase().replace(/\s+/g, "") ===
+                    "pool1"
+                      ? "project-category--1"
+                      : project.category.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "") === "pool2"
+                      ? "project-category--2"
+                      : project.category.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "") === "pool3"
+                      ? "project-category--3"
+                      : "text-black"
+                  }`}
+                >
+                  {project.category.name}
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Project Content */}
@@ -97,12 +99,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             {/* Reward */}
             {project.reward && (
               <>
-                <h2 className="text-3xl font-semibold text-primary">
-                  Reward
-                </h2>
-                <div className="text-lg text-black">
-                  {project.reward}
-                </div>
+                <h2 className="text-3xl font-semibold text-primary">Reward</h2>
+                <div className="text-lg text-black">{project.reward}</div>
               </>
             )}
 
@@ -150,15 +148,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Be a Member Button */}
-            {canUserBeAddedProject && (
+            {canUserBeAddedProject ? (
               <div className="mt-8 text-center">
-                <BeAMemberButton
-                  project={project}
-                  userName={user?.name || ""}
-                  userEmail={user?.email || ""}
-                />
+                <TeamModalForm project={project} projectTeams={projectTeams} />
               </div>
+            ) : (
+              <p>This project has been claimed</p>
             )}
           </section>
         </div>
