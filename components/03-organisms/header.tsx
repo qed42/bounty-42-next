@@ -15,7 +15,7 @@ import { signOut, useSession } from "next-auth/react";
 import { usePathname } from "next/navigation"
 
 const navigationItems = [
-  { title: "Home", href: "/" },
+  { title: "Home", href: "home/" },
   { title: "Projects", href: "/project" },
 ];
 
@@ -28,7 +28,7 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-muted header">
       <div className="container mx-auto px-4 min-h-20 h-auto flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center">
+        <Link href="/home" className="flex items-center">
           <Image
             src="/QED42 logo.svg"
             alt="Logo"
