@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card";
-import { Users } from "lucide-react";
 import Image from "next/image";
 // importing types
 import type { CardItemProps } from "@/types/project";
@@ -11,7 +10,6 @@ import type { CardItemProps } from "@/types/project";
 export function CardItem({
   title,
   description,
-  teamCount,
   category,
   image,
   link,
@@ -44,14 +42,6 @@ export function CardItem({
         <CardHeader>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription className="line-clamp-5">{description}</CardDescription>
-
-          {/* Team Count */}
-
-          {/* Uncomment if you want to show team count */}
-          {/* <div className="flex items-center text-sm text-muted-foreground mt-2">
-            <Users className="h-4 w-4 mr-1" />
-            <span>{teamCount} Member{teamCount > 1 ? "s" : ""}</span>
-          </div> */}
 
           {/* Category */}
           <div

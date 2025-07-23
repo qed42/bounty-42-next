@@ -1,60 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Project, ProjectTeam, TeamData, TeamMember } from "@/types/project";
 import { drupal } from "../drupal";
 import { getUsername } from "@/utils/helpers";
-
-// TYPES
-type TeamMember = {
-  uuid: string;
-  email?: string;
-};
-
-type TeamMem = {
-  id: string;
-  name: string;
-  mail: string;
-};
-
-type ProjectTeam = {
-  id: string;
-  name: string;
-  field_team_members: TeamMem[];
-};
-
-// INTERFACES
-interface TeamData {
-  teamName: string;
-  teamType?: "team" | "solo";
-  member1: string;
-  member2: string;
-  member3: string;
-}
-
-interface ProjectTeamMember {
-  email: string;
-  name: string;
-  employeeImage: {
-    url: string;
-  };
-}
-
-interface Project {
-  id: string;
-  title?: string;
-  durations?: string;
-  body?: {
-    value?: string;
-    summary?: string;
-  };
-  path?: string;
-  defaultImage?: {
-    url?: string;
-  };
-  projectTeam?: ProjectTeamMember[] | null;
-  teams?: {
-    id: string;
-    type?: string;
-  }[];
-}
 
 // Creates users in Drupal from a list of email addresses.
 const createUsersInDrupal = async (userEmails: string[] = []) => {

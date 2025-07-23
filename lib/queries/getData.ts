@@ -27,18 +27,6 @@ export const GET_PROJECTS = gql`
             title
             alt
           }
-          projectTeam {
-            ... on TermTeam {
-              employeeImage {
-                url
-                alt
-                title
-              }
-              name
-              email
-              id
-            }
-          }
         }
         cursor
       }
@@ -75,18 +63,6 @@ export const GET_PROJECT_BY_PATH = gql`
               url
               title
               alt
-            }
-            projectTeam {
-              ... on TermTeam {
-                id
-                name
-                email
-                employeeImage {
-                  url
-                  alt
-                  title
-                }
-              }
             }
             teams {
               ... on TermProjectTeam {
