@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,28 +12,40 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useSession } from "next-auth/react";
+import { addTeamToProject } from "@/lib/queries/updateData";
+import { ProjectNode } from "@/types/project";
 
-export default function TeamModalForm() {
-  const [open, setOpen] = useState(false)
-  const [currentView, setCurrentView] = useState<"initial" | "createTeam">("initial")
-  const [enrollTeamName, setEnrollTeamName] = useState("")
+interface TeamModalFormProps {
+  project: ProjectNode;
+}
+
+export default function TeamModalForm({ project, projectTeams }: TeamModalFormProps) {
+  const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<"initial" | "createTeam">(
+    "initial"
+  );
+  const [enrollTeamName, setEnrollTeamName] = useState("");
   const [formData, setFormData] = useState({
     teamName: "",
     teamType: "solo" as "solo" | "team",
-    member1: "",
+    member1: session ? session?.user?.email : "",
     member2: "",
     member3: "",
-  })
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Form submitted:", formData)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // console.log("Form submitted:", formData);
     // Handle form submission here
-    setOpen(false)
-    setCurrentView("initial") // Reset to initial view
+    const res = await addTeamToProject(formData, project, projectTeams);
+    console.log(`MODAL RES`, res);
+    setOpen(false);
+    setCurrentView("initial"); // Reset to initial view
     // Reset form if needed
     setFormData({
       teamName: "",
@@ -41,41 +53,47 @@ export default function TeamModalForm() {
       member1: "",
       member2: "",
       member3: "",
-    })
-  }
+    });
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
+    <div className="flex items-center justify-center p-4">
       <Dialog
         open={open}
         onOpenChange={(isOpen) => {
-          setOpen(isOpen)
+          setOpen(isOpen);
           if (!isOpen) {
-            setCurrentView("initial")
-            setEnrollTeamName("")
+            setCurrentView("initial");
+            setEnrollTeamName("");
           }
         }}
       >
         <DialogTrigger asChild>
-          <Button>Join Team</Button>
+          <Button>Claim</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           {currentView === "initial" ? (
             <>
               <DialogHeader>
                 <DialogTitle>Join or Create Team</DialogTitle>
-                <DialogDescription>Choose to create a new team or enroll in an existing one.</DialogDescription>
+                <DialogDescription>
+                  Choose to create a new team or enroll in an existing one.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-6 py-4">
                 <div className="space-y-4">
-                  <Button onClick={() => setCurrentView("createTeam")} className="w-full" size="lg">
+                  <Button
+                    onClick={() => setCurrentView("createTeam")}
+                    className="w-full"
+                    size="lg"
+                  >
                     Create a new team
                   </Button>
 
@@ -84,12 +102,16 @@ export default function TeamModalForm() {
                       <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or
+                      </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="enroll-team">Enter existing team name</Label>
+                    <Label htmlFor="enroll-team">
+                      Enter existing team name
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         id="enroll-team"
@@ -100,9 +122,9 @@ export default function TeamModalForm() {
                       />
                       <Button
                         onClick={() => {
-                          console.log("Enrolling in team:", enrollTeamName)
-                          setOpen(false)
-                          setEnrollTeamName("")
+                          console.log("Enrolling in team:", enrollTeamName);
+                          setOpen(false);
+                          setEnrollTeamName("");
                         }}
                         disabled={!enrollTeamName.trim()}
                       >
@@ -113,7 +135,11 @@ export default function TeamModalForm() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                >
                   Cancel
                 </Button>
               </DialogFooter>
@@ -122,7 +148,9 @@ export default function TeamModalForm() {
             <>
               <DialogHeader>
                 <DialogTitle>Create New Team</DialogTitle>
-                <DialogDescription>Enter your team details below. Click submit when youre done.</DialogDescription>
+                <DialogDescription>
+                  Enter your team details below. Click submit when youre done.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-4 py-4">
@@ -131,7 +159,9 @@ export default function TeamModalForm() {
                     <Input
                       id="team-name"
                       value={formData.teamName}
-                      onChange={(e) => handleInputChange("teamName", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("teamName", e.target.value)
+                      }
                       placeholder="Enter team name"
                       required
                     />
@@ -147,10 +177,15 @@ export default function TeamModalForm() {
                           name="teamType"
                           value="solo"
                           checked={formData.teamType === "solo"}
-                          onChange={(e) => handleInputChange("teamType", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("teamType", e.target.value)
+                          }
                           className="h-4 w-4"
                         />
-                        <Label htmlFor="solo" className="text-sm font-normal cursor-pointer">
+                        <Label
+                          htmlFor="solo"
+                          className="text-sm font-normal cursor-pointer"
+                        >
                           Solo
                         </Label>
                       </div>
@@ -161,10 +196,15 @@ export default function TeamModalForm() {
                           name="teamType"
                           value="team"
                           checked={formData.teamType === "team"}
-                          onChange={(e) => handleInputChange("teamType", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("teamType", e.target.value)
+                          }
                           className="h-4 w-4"
                         />
-                        <Label htmlFor="team" className="text-sm font-normal cursor-pointer">
+                        <Label
+                          htmlFor="team"
+                          className="text-sm font-normal cursor-pointer"
+                        >
                           Team
                         </Label>
                       </div>
@@ -173,17 +213,24 @@ export default function TeamModalForm() {
 
                   <div className="space-y-4">
                     <Label className="text-sm font-medium">
-                      {formData.teamType === "solo" ? "Team Member" : "Team Members"}
+                      {formData.teamType === "solo"
+                        ? "Team Member"
+                        : "Team Members"}
                     </Label>
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label htmlFor="member-1" className="text-sm text-muted-foreground">
+                        <Label
+                          htmlFor="member-1"
+                          className="text-sm text-muted-foreground"
+                        >
                           {formData.teamType === "solo" ? "Member" : "Member 1"}
                         </Label>
                         <Input
                           id="member-1"
                           value={formData.member1}
-                          onChange={(e) => handleInputChange("member1", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("member1", e.target.value)
+                          }
                           placeholder="Enter member email"
                         />
                       </div>
@@ -191,24 +238,34 @@ export default function TeamModalForm() {
                       {formData.teamType === "team" && (
                         <>
                           <div className="space-y-2">
-                            <Label htmlFor="member-2" className="text-sm text-muted-foreground">
+                            <Label
+                              htmlFor="member-2"
+                              className="text-sm text-muted-foreground"
+                            >
                               Member 2
                             </Label>
                             <Input
                               id="member-2"
                               value={formData.member2}
-                              onChange={(e) => handleInputChange("member2", e.target.value)}
+                              onChange={(e) =>
+                                handleInputChange("member2", e.target.value)
+                              }
                               placeholder="Enter member email"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="member-3" className="text-sm text-muted-foreground">
+                            <Label
+                              htmlFor="member-3"
+                              className="text-sm text-muted-foreground"
+                            >
                               Member 3
                             </Label>
                             <Input
                               id="member-3"
                               value={formData.member3}
-                              onChange={(e) => handleInputChange("member3", e.target.value)}
+                              onChange={(e) =>
+                                handleInputChange("member3", e.target.value)
+                              }
                               placeholder="Enter member email"
                             />
                           </div>
@@ -218,7 +275,11 @@ export default function TeamModalForm() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setCurrentView("initial")}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentView("initial")}
+                  >
                     Back
                   </Button>
                   <Button type="submit">Submit</Button>
@@ -229,5 +290,5 @@ export default function TeamModalForm() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

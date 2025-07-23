@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
-import { GET_PROJECT_BY_PATH } from "@/lib/queries/getData";
+import {
+  GET_PROJECT_BY_PATH,
+  getProjectWithTeamMembersById,
+} from "@/lib/queries/getData";
 import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
@@ -7,6 +10,7 @@ import { getServerSession } from "next-auth";
 import AuthGuard from "@/components/AuthGuard";
 import { authOptions } from "@/lib/authOptions";
 import { Clock, Tag } from "lucide-react"
+import TeamModalForm from "@/components/03-organisms/team-modal-form";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -30,6 +34,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const project = data.route.entity;
+  const response = await getProjectWithTeamMembersById(project.id);
+  const projectTeams = response?.field_teams ?? [];
 
   if (!project) {
     notFound();
@@ -40,7 +46,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   //     (member: ProjectTeamMember) => member.email === "ruturaj@qed42.com"
   //   );
   const canUserBeAddedProject =
-    project.projectTeam == null || project.projectTeam.length < 3;
+    project.teams == null || project.teams.length < 3;
+
+  console.log(`PROJECT`, project);
+  console.log(`projectTeams`, projectTeams);
 
   return (
     <AuthGuard>
@@ -97,12 +106,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             {/* Reward */}
             {project.reward && (
               <>
-                <h2 className="text-3xl font-semibold text-primary">
-                  Reward
-                </h2>
-                <div className="text-lg text-black">
-                  {project.reward}
-                </div>
+                <h2 className="text-3xl font-semibold text-primary">Reward</h2>
+                <div className="text-lg text-black">{project.reward}</div>
               </>
             )}
 
@@ -151,13 +156,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             )}
 
             {/* Be a Member Button */}
-            {canUserBeAddedProject && (
+            {/* {canUserBeAddedProject && (
               <div className="mt-8 text-center">
                 <BeAMemberButton
                   project={project}
                   userName={user?.name || ""}
                   userEmail={user?.email || ""}
                 />
+              </div>
+            )} */}
+
+            {canUserBeAddedProject && (
+              <div className="mt-8 text-center">
+                <TeamModalForm project={project} projectTeams={projectTeams} />
               </div>
             )}
           </section>
