@@ -6,8 +6,7 @@ import {
 import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
-import { authOptions } from "@/lib/authOptions";
-import { Clock, Tag } from "lucide-react"
+import { Clock, Tag } from "lucide-react";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
 
 interface PageProps {
@@ -47,30 +46,35 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         <div className="mb-5">
           <h1 className="text-4xl font-bold text-primary">{project.title}</h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-black">
-          <div className="flex items-center gap-2 text-lg">
-            <Clock className="w-5 h-5" />
-            <span>{project.durations}</span>
-          </div>
-          <div className="flex items-center gap-2 text-lg">
-            <Tag className="w-5 h-5" />
-            <div className="text-base px-0 py-1">
-              {/* Category */}
-              <div
-                className={`project-category w-max ${
-                  project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool1'
-                    ? 'project-category--1'
-                    : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool2'
-                    ? 'project-category--2'
-                    : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool3'
-                    ? 'project-category--3'
-                    : 'text-black'
-                }`}
-              >
-                {project.category.name}
+            <div className="flex items-center gap-2 text-lg">
+              <Clock className="w-5 h-5" />
+              <span>{project.durations}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <Tag className="w-5 h-5" />
+              <div className="text-base px-0 py-1">
+                {/* Category */}
+                <div
+                  className={`project-category w-max ${
+                    project.category.name.toLowerCase().replace(/\s+/g, "") ===
+                    "pool1"
+                      ? "project-category--1"
+                      : project.category.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "") === "pool2"
+                      ? "project-category--2"
+                      : project.category.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "") === "pool3"
+                      ? "project-category--3"
+                      : "text-black"
+                  }`}
+                >
+                  {project.category.name}
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Project Content */}
@@ -144,10 +148,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {canUserBeAddedProject && (
+            {canUserBeAddedProject ? (
               <div className="mt-8 text-center">
                 <TeamModalForm project={project} projectTeams={projectTeams} />
               </div>
+            ) : (
+              <p>This project has been claimed</p>
             )}
           </section>
         </div>
