@@ -1,4 +1,5 @@
 // app/project/page.tsx
+export const dynamic = 'force-dynamic';
 
 import { Suspense } from "react";
 import ProjectListSkeleton from "@/components/03-organisms/ProjectListSuspense";
