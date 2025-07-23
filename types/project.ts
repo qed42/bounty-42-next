@@ -5,6 +5,11 @@ export type ProjectNode = {
   durations?: string;
   body?: { value?: string; summary?: string };
   path: string,
+  reward?: number;
+  category: {
+    id: string;
+    name: string;
+  };
   defaultImage?: { url?: string };
   projectTeam?: Array<{ email: string; name: string; employeeImage: { url: string } }> | null;
 };
@@ -18,6 +23,7 @@ export type Card = {
   title: string;
   description: string;
   teamCount: number;
+  category: string;
   image: string;
   link: string;
 };
@@ -38,6 +44,7 @@ export type CardItemProps = {
   id: string;
   title: string;
   description: string;
+  category: string;
   image: string;
   teamCount: number;
   link: string;

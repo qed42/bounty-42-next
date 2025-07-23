@@ -11,6 +11,12 @@ const GET_PROJECT_DATA = gql`
           value
         }
         reward
+        category {
+          ... on TermCategory {
+            id
+            name
+          }
+        }
         defaultImage {
           url
         }
@@ -57,7 +63,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container relative mx-auto px-4 py-8">
       {/* Title and Duration */}
       <div className="mb-5">
         <h1 className="text-4xl font-bold text-primary">{project.title}</h1>
@@ -74,6 +80,21 @@ export default async function Page() {
             sizes="(max-width: 768px) 100vw, 700px"
             className="object-cover rounded-t-2xl"
           />
+        </div>
+
+        {/* Category */}
+        <div
+          className={`project-category ${
+            project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool1'
+              ? 'project-category--1'
+              : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool2'
+              ? 'project-category--2'
+              : project.category.name.toLowerCase().replace(/\s+/g, '') === 'pool3'
+              ? 'project-category--3'
+              : 'text-black'
+          }`}
+        >
+          {project.category.name}
         </div>
 
         {/* Description */}

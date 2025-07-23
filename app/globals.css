@@ -93,7 +93,7 @@
 
   /* --primary: oklch(0.205 0 0); */
 
-  --primary: #2d1863;
+  --primary: #2b0f72;
 
   --primary-foreground: oklch(0.985 0 0);
 
@@ -236,5 +236,28 @@
 
   .text-18 {
     @apply text-[18px];
+  }
+
+  .project-category {
+    @apply text-center px-4 py-[2px] text-[16px] rounded-full text-sm font-medium text-white;
+  }
+
+  .project-category--1 {
+    @apply bg-red-600
+  }
+
+  .project-category--2 {
+    @apply bg-lime-700;
+  }
+
+  .project-category--3 {
+    @apply bg-yellow-600;
+  }
+
+  .header {
+    svg.lucide-menu,
+    svg.lucide-x {
+      @apply w-[30px] h-[30px];
+    }
   }
 }

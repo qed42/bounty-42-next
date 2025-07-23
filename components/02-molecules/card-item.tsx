@@ -12,6 +12,7 @@ export function CardItem({
   title,
   description,
   teamCount,
+  category,
   image,
   link,
 }: CardItemProps) {
@@ -25,7 +26,7 @@ export function CardItem({
       className="no-underline"
     >
       <Card
-        className="flex flex-col h-full text-primary transition-all duration-300 hover:shadow-xl group cursor-pointer pt-0"
+        className="relative flex flex-col h-full text-primary transition-all duration-300 hover:shadow-xl group cursor-pointer pt-0"
         tabIndex={0}
         role="link"
       >
@@ -37,15 +38,36 @@ export function CardItem({
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
+          <div className='absolute inset-0 bg-black/20 pointer-events-none'></div>
         </div>
 
         <CardHeader>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription className="line-clamp-5">{description}</CardDescription>
-          <div className="flex items-center text-sm text-muted-foreground mt-2">
+
+          {/* Team Count */}
+
+          {/* Uncomment if you want to show team count */}
+          {/* <div className="flex items-center text-sm text-muted-foreground mt-2">
             <Users className="h-4 w-4 mr-1" />
             <span>{teamCount} Member{teamCount > 1 ? "s" : ""}</span>
+          </div> */}
+
+          {/* Category */}
+          <div
+            className={`project-category w-max absolute top-4 right-4 text-xs ${
+              category.toLowerCase().replace(/\s+/g, '') === 'pool1'
+                ? 'project-category--1'
+                : category.toLowerCase().replace(/\s+/g, '') === 'pool2'
+                ? 'project-category--2'
+                : category.toLowerCase().replace(/\s+/g, '') === 'pool3'
+                ? 'project-category--3'
+                : 'text-black'
+            }`}
+          >
+            {category}
           </div>
+
         </CardHeader>
 
         <CardFooter className="mt-auto flex flex-col items-start gap-2">

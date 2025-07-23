@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { User, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const { data: session } = useSession();
@@ -37,13 +38,19 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button
+          {/* <button
             onClick={() => signOut()}
             className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
           >
             <LogOut className="w-5 h-5" />
             <span>Sign out</span>
-          </button>
+          </button> */}
+          <Button variant="outline"
+            onClick={() => signOut()}
+            className="w-full cursor-pointer py-4 px-4 text-md font-medium">
+            <LogOut className="w-5 h-5" />
+            Sign out
+          </Button>
         </div>
       </div>
     );
@@ -60,7 +67,7 @@ export default function LoginPage() {
         <div className="space-y-6">
           <button
             onClick={() => signIn("google")}
-            className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-3 cursor-pointer"
+            className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform transition-all duration-200 flex items-center justify-center space-x-3 cursor-pointer"
           >
             <Image src="/google-logo.svg" alt="Google" width={30} height={30} />
             <span>Sign in with Google</span>
