@@ -5,8 +5,6 @@ import {
 } from "@/lib/queries/getData";
 import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
-import BeAMemberButton from "@/components/02-molecules/BeAMemberButton";
-import { getServerSession } from "next-auth";
 import AuthGuard from "@/components/AuthGuard";
 import { authOptions } from "@/lib/authOptions";
 import { Clock, Tag } from "lucide-react"
@@ -19,8 +17,6 @@ interface PageProps {
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const client = await getGraphQLClient();
-  const session = await getServerSession(authOptions);
-  const user = session?.user;
 
   // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
   // const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -41,15 +37,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // const isUserAlreadyInProject: ProjectTeamMember[] =
-  //   project.projectTeam.filter(
-  //     (member: ProjectTeamMember) => member.email === "ruturaj@qed42.com"
-  //   );
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
-
-  console.log(`PROJECT`, project);
-  console.log(`projectTeams`, projectTeams);
 
   return (
     <AuthGuard>
@@ -154,17 +143,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 </ul>
               </div>
             )}
-
-            {/* Be a Member Button */}
-            {/* {canUserBeAddedProject && (
-              <div className="mt-8 text-center">
-                <BeAMemberButton
-                  project={project}
-                  userName={user?.name || ""}
-                  userEmail={user?.email || ""}
-                />
-              </div>
-            )} */}
 
             {canUserBeAddedProject && (
               <div className="mt-8 text-center">

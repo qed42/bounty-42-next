@@ -1,151 +1,62 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ProjectNode } from "@/types/project";
 import { drupal } from "../drupal";
 import { getUsername } from "@/utils/helpers";
 
-export async function addUserToProject(
-  project: ProjectNode,
-  termName: string,
-  termEmail: string
-) {
-  const projectId = project.id;
+// TYPES
+type TeamMember = {
+  uuid: string;
+  email?: string;
+};
 
-  // Get taxonomy term by email
-  const response = await drupal.getResourceCollection("taxonomy_term--team", {
-    params: {
-      "filter[field_email]": termEmail,
-    },
-  });
+type TeamMem = {
+  id: string;
+  name: string;
+  mail: string;
+};
 
-  let term = response[0];
+type ProjectTeam = {
+  id: string;
+  name: string;
+  field_team_members: TeamMem[];
+};
 
-  if (!term) {
-    if (!termName?.trim() && !termEmail?.trim()) {
-      return {
-        data: project,
-        termAdded: true,
-        message: "Team member's name and email are missing",
-      };
-    }
+// INTERFACES
+interface TeamData {
+  teamName: string;
+  teamType?: "team" | "solo";
+  member1: string;
+  member2: string;
+  member3: string;
+}
 
-    term = await drupal.createResource(
-      "taxonomy_term--team",
-      {
-        data: {
-          type: "taxonomy_term--team",
-          attributes: { name: termName, field_email: termEmail },
-        },
-      },
-      { withAuth: true }
-    );
-  }
-
-  const existingTeam: any =
-    project.projectTeam?.map((member: any) => ({
-      type: member.type || "taxonomy_term--team",
-      id: member.id,
-    })) ?? [];
-  const isAlreadyAdded = existingTeam.some(
-    (member: any) => member.id === term.id
-  );
-
-  if (isAlreadyAdded) {
-    return {
-      data: project,
-      termAdded: true,
-      message: "Already a member of the project",
-    };
-  }
-
-  const updatedTeam: any = [
-    ...existingTeam,
-    { type: "taxonomy_term--team", id: term.id },
-  ];
-
-  const updated = await drupal.updateResource(
-    "node--project",
-    projectId,
-    {
-      data: {
-        type: "node--project",
-        id: projectId,
-        relationships: {
-          field_project_team: {
-            data: updatedTeam,
-          },
-        },
-      },
-    },
-    { withAuth: true }
-  );
-
-  return {
-    data: updated,
-    termAdded: true,
-    message: "Successfully joined the project!",
+interface ProjectTeamMember {
+  email: string;
+  name: string;
+  employeeImage: {
+    url: string;
   };
 }
 
-export async function addUserToTeamTaxonomy(
-  userEmail: string,
-  userName?: string
-) {
-  // Validate required parameters
-  if (!userEmail || typeof userEmail !== "string" || !userEmail.trim()) {
-    console.error("Valid userEmail is required");
-    return;
-  }
-
-  const trimmedEmail = userEmail.trim();
-  const trimmedName = userName?.trim() || null;
-
-  try {
-    // Check if taxonomy term already exists for this email
-    const existingTerms = await drupal.getResourceCollection(
-      "taxonomy_term--team",
-      {
-        params: {
-          "filter[field_email]": trimmedEmail,
-        },
-      }
-    );
-
-    // Return existing term if found
-    if (existingTerms && existingTerms.length > 0) {
-      return existingTerms[0];
-    }
-
-    // Prepare attributes object, only including name if it has a valid value
-    const attributes: Record<string, any> = {
-      field_email: trimmedEmail,
-    };
-
-    if (trimmedName) {
-      attributes.name = trimmedName;
-    }
-
-    // Create new taxonomy term if none exists
-    const newTerm = await drupal.createResource(
-      "taxonomy_term--team",
-      {
-        data: {
-          type: "taxonomy_term--team",
-          attributes,
-        },
-      },
-      { withAuth: true }
-    );
-
-    return newTerm;
-  } catch (error) {
-    console.error(
-      `Failed to add user ${trimmedEmail} to team taxonomy:`,
-      error
-    );
-    throw error;
-  }
+interface Project {
+  id: string;
+  title?: string;
+  durations?: string;
+  body?: {
+    value?: string;
+    summary?: string;
+  };
+  path?: string;
+  defaultImage?: {
+    url?: string;
+  };
+  projectTeam?: ProjectTeamMember[] | null;
+  teams?: {
+    id: string;
+    type?: string;
+  }[];
 }
 
+// Creates users in Drupal from a list of email addresses.
 const createUsersInDrupal = async (userEmails: string[] = []) => {
   const users = await Promise.all(
     userEmails.map(async (mail) => {
@@ -185,14 +96,11 @@ const createUsersInDrupal = async (userEmails: string[] = []) => {
   const filteredUsers = users.filter(Boolean); // Remove nulls
   return filteredUsers;
 };
-type TeamMember = {
-  uuid: string;
-  email?: string;
-};
 
+// Creates a new project team in Drupal if name and members are unique.
 export const createProjectTeam = async (
   teamName: string,
-  teamMembers: TeamMember[]
+  teamMembers: TeamMember[] | any
 ) => {
   if (!teamName || teamMembers.length === 0) {
     console.warn("Team name or team members missing.");
@@ -200,6 +108,7 @@ export const createProjectTeam = async (
   }
 
   try {
+    // FIXME: Maybe find a way to improve this GET request, move it to a server based fetch maybe.
     // Step 1: Fetch all existing project teams
     const existingTeams = await drupal.getResourceCollection(
       "taxonomy_term--project_teams",
@@ -210,20 +119,21 @@ export const createProjectTeam = async (
       }
     );
 
-    console.log(`existingTeams`, existingTeams);
-    console.log(`teamMembers`, teamMembers);
-
     // Step 2: Check for name conflict
     const teamWithSameName = existingTeams.find(
       (team: any) => team.name.toLowerCase() === teamName.toLowerCase()
     );
 
     if (teamWithSameName) {
-      return { team_created: false, message: "Team name taken" };
+      return {
+        id: "",
+        success: false,
+        message: "Oops! That team name is already taken. Try another one.",
+      };
     }
 
     // Step 3: Check for duplicate member sets
-    const newMemberUUIDs = teamMembers.map((member) => member.uuid).sort();
+    const newMemberUUIDs = teamMembers.map((member: any) => member.uuid).sort();
 
     for (const team of existingTeams) {
       const members = team?.field_team_members || [];
@@ -231,13 +141,15 @@ export const createProjectTeam = async (
 
       const sameLength = memberUUIDs.length === newMemberUUIDs.length;
       const sameMembers =
-        sameLength && memberUUIDs.every((id, i) => id === newMemberUUIDs[i]);
+        sameLength &&
+        memberUUIDs.every((id: string, i: number) => id === newMemberUUIDs[i]);
 
       if (sameMembers) {
         return {
-          team_created: false,
-          message: `Team already exists with name: ${team.name}`,
+          id: "",
+          success: false,
           team,
+          message: `The team name "${team.name}" is already in use.`,
         };
       }
     }
@@ -253,7 +165,7 @@ export const createProjectTeam = async (
           },
           relationships: {
             field_team_members: {
-              data: teamMembers.map((user) => ({
+              data: teamMembers.map((user: any) => ({
                 type: "user--user",
                 id: user.uuid,
               })),
@@ -265,7 +177,7 @@ export const createProjectTeam = async (
 
     return {
       ...response,
-      team_created: true,
+      success: true,
     };
   } catch (error) {
     console.error("Failed to create project team:", error);
@@ -273,18 +185,7 @@ export const createProjectTeam = async (
   }
 };
 
-type TeamMem = {
-  id: string;
-  name: string;
-  mail: string;
-};
-
-type ProjectTeam = {
-  id: string;
-  name: string;
-  field_team_members: TeamMem[];
-};
-
+// Checks if a team member already exists in any of the project teams.
 export function checkIfMemberExists(
   projectTeams: ProjectTeam[],
   email: string
@@ -301,7 +202,7 @@ export function checkIfMemberExists(
 
     if (match) {
       return {
-        message: "Team member already exists in another team",
+        message: "The team member already belongs to a different team.",
         memberExists: true,
         email,
         id: match.id,
@@ -312,7 +213,12 @@ export function checkIfMemberExists(
   return null;
 }
 
-export async function addTeamToProject(teamData, project, allProjectTeams) {
+// Main function to add a team to a project after validation and creation.
+export async function addTeamToProject(
+  teamData: TeamData,
+  project: Project,
+  allProjectTeams: ProjectTeam[]
+) {
   const { member1, member2, member3, teamName } = teamData;
   const teamMails = [member1, member2, member3];
   const projectId = project.id;
@@ -326,10 +232,14 @@ export async function addTeamToProject(teamData, project, allProjectTeams) {
   const doesMemberExist = existingMembers.filter((item) => item != null);
 
   if (doesMemberExist && doesMemberExist.length > 0) {
+    const emails = doesMemberExist.map((member) => member.email).join(", ");
+    const message = `The following member(s) are already part of another team: ${emails}`;
+
     return {
+      success: false,
       data: project,
       userMail: doesMemberExist.map((member) => member.email),
-      message: "Already member is a part of another team",
+      message,
     };
   }
 
@@ -338,11 +248,12 @@ export async function addTeamToProject(teamData, project, allProjectTeams) {
 
   // 3: Create Project team taxonomy and handles cases like similar team names and similar team members.
   const projectTeam = await createProjectTeam(teamName, usersDrupal);
-  if (!projectTeam?.team_created) {
+  if (!projectTeam?.success) {
     return projectTeam;
   }
 
   // 4: Attach projectTeam to the bounty project
+  // FIXME: Maybe we don't need this anymore.
   const existingTeam: any =
     project.teams?.map((member: any) => ({
       type: member.type || "taxonomy_term--project_teams",
@@ -355,9 +266,9 @@ export async function addTeamToProject(teamData, project, allProjectTeams) {
 
   if (isAlreadyAdded) {
     return {
+      success: false,
       data: project,
-      termAdded: true,
-      message: "Already team is a part of the project",
+      message: "This team is already involved in the project.",
     };
   }
 
@@ -383,8 +294,8 @@ export async function addTeamToProject(teamData, project, allProjectTeams) {
   );
 
   return {
+    success: true,
     data: updated,
-    termAdded: true,
-    message: "Successfully joined the project!",
+    message: "Project claimed successfully.",
   };
 }
