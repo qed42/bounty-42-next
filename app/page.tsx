@@ -2,6 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Trophy, Target, Code } from "lucide-react";
 import Link from "next/link";
 
+export const metadata = {
+  title: "Earn Rewards Building AI Projects | QED42 AI Bounty Platform",
+  description:
+    "Join the premier platform where AI developers claim bounties, build innovative projects, and earn rewards. Discover your next AI challenge today.",
+};
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">

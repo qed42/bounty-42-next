@@ -16,6 +16,12 @@ interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
 }
 
+export const metadata = {
+  title: "Project detail | QED42 AI Bounty Platform",
+  description:
+    "Join the premier platform where AI developers claim bounties, build innovative projects, and earn rewards. Discover your next AI challenge today.",
+};
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
 

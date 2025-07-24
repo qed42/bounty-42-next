@@ -9,6 +9,13 @@ import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import type { ProjectEdge } from "@/types/project";
 import AuthGuard from "@/components/AuthGuard";
 
+export const metadata = {
+  title: "Projects | QED42 AI Bounty Platform",
+  description:
+    "Join the premier platform where AI developers claim bounties, build innovative projects, and earn rewards. Discover your next AI challenge today.",
+};
+
+
 export default async function ProjectListingPage() {
   const client = await getGraphQLClient();
 
