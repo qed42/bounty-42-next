@@ -96,7 +96,7 @@ export const createProjectTeam = async (
           id: "",
           success: false,
           team,
-          message: `The team name "${team.name}" is already in use.`,
+          message: `These members are already part of the team: "${team.name}".`,
         };
       }
     }
@@ -149,7 +149,7 @@ export function checkIfMemberExists(
 
     if (match) {
       return {
-        message: "The team member already belongs to a different team.",
+        message: "The team member already part of a different team.",
         memberExists: true,
         email,
         id: match.id,

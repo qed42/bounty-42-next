@@ -12,23 +12,23 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
-import { usePathname } from "next/navigation"
+import { usePathname } from "next/navigation";
 
-const navigationItems = [
-  { title: "Home", href: "home/" },
-  { title: "Projects", href: "/project" },
-];
+const navItems = {
+  loggedIn: [{ title: "Projects", href: "/project" }],
+  notLoggedIn: [{ title: "Login", href: "/login" }],
+};
 
 export function Header() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-muted header">
       <div className="container mx-auto px-4 min-h-20 h-auto flex items-center justify-between">
         {/* Logo */}
-        <Link href="/home" className="flex items-center">
+        <Link href="/" className="flex items-center">
           <Image
             src="/QED42 logo.svg"
             alt="Logo"
@@ -40,25 +40,42 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className={`text-18 font-medium no-underline ${
-                pathname === item.href
-                  ? "text-primary" // Active link color
-                  : "text-gray-800 hover:text-primary" // Inactive link color
-              }`}
-            >
-              {item.title}
-            </Link>
-          ))}
-          {session && (
-            <Button className="cursor-pointer"
-              onClick={() => signOut()}>
-              <LogOut className="w-5 h-5" />
-              Sign out
-            </Button>
+          {session ? (
+            <>
+              {navItems.loggedIn.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className={`text-18 font-medium no-underline ${
+                    pathname === item.href
+                      ? "text-primary" // Active link color
+                      : "text-gray-800 hover:text-primary" // Inactive link color
+                  }`}
+                >
+                  {item.title}
+                </Link>
+              ))}
+              <Button className="cursor-pointer" onClick={() => signOut()}>
+                <LogOut className="w-5 h-5" />
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              {navItems.notLoggedIn.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className={`text-18 font-medium no-underline ${
+                    pathname === item.href
+                      ? "text-primary" // Active link color
+                      : "text-gray-800 hover:text-primary" // Inactive link color
+                  }`}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </>
           )}
         </nav>
 
@@ -74,28 +91,46 @@ export function Header() {
             {/* Added SheetTitle for accessibility */}
             <SheetTitle className="sr-only">Main Menu</SheetTitle>
             <div className="flex flex-col space-y-4 mt-4 p-4">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className= {`text-lg font-medium no-underline transition-colors
+              {session ? (
+                <>
+                  {navItems.loggedIn.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className={`text-lg font-medium no-underline transition-colors
                   ${
                     pathname === item.href
                       ? "text-primary" // Active link color
                       : "text-gray-800 hover:text-primary" // Inactive link color
                   }`}
-                  onClick={() => setIsOpen(false)} // Close sheet on link click
-                >
-                  {item.title}
-                </Link>
-              ))}
-
-              {session && (
-                <Button className="cursor-pointer"
-                  onClick={() => signOut()}>
-                  <LogOut className="w-5 h-5" />
-                  Sign out
-                </Button>
+                      onClick={() => setIsOpen(false)} // Close sheet on link click
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                  <Button className="cursor-pointer" onClick={() => signOut()}>
+                    <LogOut className="w-5 h-5" />
+                    Sign out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {navItems.notLoggedIn.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className={`text-lg font-medium no-underline transition-colors
+                  ${
+                    pathname === item.href
+                      ? "text-primary" // Active link color
+                      : "text-gray-800 hover:text-primary" // Inactive link color
+                  }`}
+                      onClick={() => setIsOpen(false)} // Close sheet on link click
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </>
               )}
             </div>
           </SheetContent>

@@ -126,19 +126,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             {/* Be a Member Button / Claimed Status (Mobile View) */}
             {!isUserInProject ? (
               canUserBeAddedProject ? (
-                <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+                <div className="mt-8 text-center xl:hidden">
                   <TeamModalForm
                     project={project}
                     projectTeams={projectTeams}
                   />
                 </div>
               ) : (
-                <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
+                <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">
                   This project has been claimed
                 </p>
               )
             ) : (
-              <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
+              <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">
                 You are already part of another bounty project.
               </p>
             )}
