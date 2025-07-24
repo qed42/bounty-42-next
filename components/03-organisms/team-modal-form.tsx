@@ -109,7 +109,6 @@ export default function TeamModalForm({
     }
 
     try {
-      // console.log("Form submitted:", formData);
       // Handle form submission here
       const res = await addTeamToProject(formData, project, projectTeams);
       if (!res?.success) {

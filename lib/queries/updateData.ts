@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use server";
+
 import { Project, ProjectTeam, TeamData, TeamMember } from "@/types/project";
 import { drupal } from "../drupal";
 import { getUsername } from "@/utils/helpers";
@@ -133,15 +135,10 @@ export const createProjectTeam = async (
 };
 
 // Checks if a team member already exists in any of the project teams.
-export function checkIfMemberExists(
+export async function checkIfMemberExists(
   projectTeams: ProjectTeam[],
   email: string
-): {
-  message: string;
-  memberExists: boolean;
-  email: string;
-  id: string;
-} | null {
+) {
   for (const team of projectTeams) {
     const match = team.field_team_members.find(
       (member) => member.mail.toLowerCase() === email.toLowerCase()
@@ -193,14 +190,13 @@ export async function addTeamToProject(
   // 2: Create users in Drupal if not created.
   const usersDrupal = await createUsersInDrupal(teamMails);
 
-  // 3: Create Project team taxonomy and handles cases like similar team names and similar team members.
+  // 3: Create Project team taxonomy and handle cases like similar team names and similar team members.
   const projectTeam = await createProjectTeam(teamName, usersDrupal);
   if (!projectTeam?.success) {
     return projectTeam;
   }
 
   // 4: Attach projectTeam to the bounty project
-  // FIXME: Maybe we don't need this anymore.
   const existingTeam: any =
     project.teams?.map((member: any) => ({
       type: member.type || "taxonomy_term--project_teams",
@@ -210,7 +206,6 @@ export async function addTeamToProject(
   const isAlreadyAdded = existingTeam.some(
     (member: any) => member.id === projectTeam.id
   );
-
   if (isAlreadyAdded) {
     return {
       success: false,

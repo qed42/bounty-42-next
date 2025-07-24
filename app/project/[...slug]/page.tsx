@@ -1,16 +1,16 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import { getServerSession } from "next-auth";
+import { Clock, Tag } from "lucide-react";
+import authOptions from "@/lib/authOptions";
 import {
   GET_PROJECT_BY_PATH,
   getProjectsForUserEmail,
   getProjectWithTeamMembersById,
 } from "@/lib/queries/getData";
-import Image from "next/image";
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
-import { Clock, Tag } from "lucide-react";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
-import { getServerSession } from "next-auth";
-import authOptions from "@/lib/authOptions";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -18,14 +18,12 @@ interface PageProps {
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const client = await getGraphQLClient();
 
+  const client = await getGraphQLClient();
   const session = (await getServerSession(authOptions)) as {
     user?: { email?: string };
   } | null;
 
-  // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
-  // const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const currentPath = `/project/${slug}`;
   const { data, error } = await client.query(GET_PROJECT_BY_PATH, {
     path: currentPath,
@@ -36,16 +34,16 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const project = data.route.entity;
-  const response = await getProjectWithTeamMembersById(project.id);
-  const isUserInProject = await getProjectsForUserEmail(
-    session?.user?.email || ""
-  );
-
-  const projectTeams = response?.field_teams ?? [];
-
   if (!project) {
     notFound();
   }
+
+  const response = await getProjectWithTeamMembersById(project.id);
+  const projectTeams = response?.field_teams ?? [];
+
+  const isUserInProject = await getProjectsForUserEmail(
+    session?.user?.email || ""
+  );
 
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
