@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   GET_PROJECT_BY_PATH,
+  getProjectsForUserEmail,
   getProjectWithTeamMembersById,
 } from "@/lib/queries/getData";
 import Image from "next/image";
@@ -8,6 +9,8 @@ import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
 import { Clock, Tag } from "lucide-react";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
+import { getServerSession } from "next-auth";
+import authOptions from "@/lib/authOptions";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -16,6 +19,10 @@ interface PageProps {
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const client = await getGraphQLClient();
+
+  const session = (await getServerSession(authOptions)) as {
+    user?: { email?: string };
+  } | null;
 
   // const slug = typeof paramsValue.slug === "string" ? paramsValue.slug : Array.isArray(paramsValue.slug) ? paramsValue.slug[0] : "";
   // const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -30,6 +37,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   const project = data.route.entity;
   const response = await getProjectWithTeamMembersById(project.id);
+  const isUserInProject = await getProjectsForUserEmail(
+    session?.user?.email || ""
+  );
+
   const projectTeams = response?.field_teams ?? [];
 
   if (!project) {
@@ -47,7 +58,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           <div className="xl:col-span-3 space-y-6">
             {/* Title and Duration/Category (Mobile View) */}
             <div className="mb-5">
-              <h1 className="text-4xl font-bold text-primary">{project.title}</h1>
+              <h1 className="text-4xl font-bold text-primary">
+                {project.title}
+              </h1>
               {/* Duration and Category - Visible on mobile, hidden on desktop */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 text-black xl:hidden">
                 <div className="flex items-center gap-2 text-lg">
@@ -60,13 +73,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     {/* Category */}
                     <div
                       className={`project-category w-max ${
-                        project.category.name.toLowerCase().replace(/\s+/g, "") === "pool1"
+                        project.category.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "") === "pool1"
                           ? "project-category--1"
-                          : project.category.name.toLowerCase().replace(/\s+/g, "") === "pool2"
-                            ? "project-category--2"
-                            : project.category.name.toLowerCase().replace(/\s+/g, "") === "pool3"
-                              ? "project-category--3"
-                              : "text-black"
+                          : project.category.name
+                              .toLowerCase()
+                              .replace(/\s+/g, "") === "pool2"
+                          ? "project-category--2"
+                          : project.category.name
+                              .toLowerCase()
+                              .replace(/\s+/g, "") === "pool3"
+                          ? "project-category--3"
+                          : "text-black"
                       }`}
                     >
                       {project.category.name}
@@ -90,7 +109,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
             {/* Description */}
             <section className="p-5 space-y-6 bg-white rounded-2xl shadow-xl">
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: project.body?.value || "" }} />
+              <div
+                className="prose max-w-none"
+                dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
+              />
             </section>
 
             {/* Reward (Mobile View) */}
@@ -102,12 +124,23 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             )}
 
             {/* Be a Member Button / Claimed Status (Mobile View) */}
-            {canUserBeAddedProject ? (
-              <div className="mt-8 text-center xl:hidden">
-                <TeamModalForm project={project} projectTeams={projectTeams} />
-              </div>
+            {!isUserInProject ? (
+              canUserBeAddedProject ? (
+                <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+                  <TeamModalForm
+                    project={project}
+                    projectTeams={projectTeams}
+                  />
+                </div>
+              ) : (
+                <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
+                  This project has been claimed
+                </p>
+              )
             ) : (
-              <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">This project has been claimed</p>
+              <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
+                You are already part of another bounty project.
+              </p>
             )}
           </div>
 
@@ -125,13 +158,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <div className="text-base px-0 py-1">
                     <div
                       className={`project-category w-max ${
-                        project.category.name.toLowerCase().replace(/\s+/g, "") === "pool1"
+                        project.category.name
+                          .toLowerCase()
+                          .replace(/\s+/g, "") === "pool1"
                           ? "project-category--1"
-                          : project.category.name.toLowerCase().replace(/\s+/g, "") === "pool2"
-                            ? "project-category--2"
-                            : project.category.name.toLowerCase().replace(/\s+/g, "") === "pool3"
-                              ? "project-category--3"
-                              : "text-black"
+                          : project.category.name
+                              .toLowerCase()
+                              .replace(/\s+/g, "") === "pool2"
+                          ? "project-category--2"
+                          : project.category.name
+                              .toLowerCase()
+                              .replace(/\s+/g, "") === "pool3"
+                          ? "project-category--3"
+                          : "text-black"
                       }`}
                     >
                       {project.category.name}
@@ -143,19 +182,30 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               {/* Reward - Desktop only */}
               {project.reward && (
                 <>
-                  <h2 className="text-2xl font-semibold text-primary pt-4 border-t border-gray-200">Reward</h2>
+                  <h2 className="text-2xl font-semibold text-primary pt-4 border-t border-gray-200">
+                    Reward
+                  </h2>
                   <div className="text-lg text-black">{project.reward}</div>
                 </>
               )}
 
               {/* Be a Member Button / Claimed Status - Desktop only */}
-              {canUserBeAddedProject ? (
-                <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-                  <TeamModalForm project={project} projectTeams={projectTeams} />
-                </div>
+              {!isUserInProject ? (
+                canUserBeAddedProject ? (
+                  <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+                    <TeamModalForm
+                      project={project}
+                      projectTeams={projectTeams}
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
+                    This project has been claimed
+                  </p>
+                )
               ) : (
                 <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
-                  This project has been claimed
+                  You are already part of another bounty project.
                 </p>
               )}
             </div>

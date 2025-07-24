@@ -1,22 +1,35 @@
-import { NextAuthOptions } from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { drupal } from "./drupal";
+import { drupal } from "@/lib/drupal"; // Your Drupal fetch wrapper
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
+// Extend the User type to include uuid
+declare module "next-auth" {
+  interface User {
+    uuid?: string;
+  }
+  interface Session {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      uuid?: string;
+    };
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   providers: [
     GoogleProvider({
-      clientId: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
-    async signIn({ profile }) {
-      if (!profile?.email) return false;
-      if (!profile.email.endsWith("@qed42.com")) return false;
+    // Called during sign-in
+    async signIn({ profile, user }) {
+      if (!profile?.email || !profile.email.endsWith("@qed42.com"))
+        return false;
 
       try {
         const response = await drupal.fetch("/api/oauth/sync-user", {
@@ -35,11 +48,33 @@ export const authOptions: NextAuthOptions = {
           return false;
         }
 
+        const drupalUser = await response.json();
+        user.uuid = drupalUser.uuid;
+
         return true;
       } catch (error) {
         console.error("Error syncing with Drupal:", error);
         return false;
       }
     },
+
+    // Called when JWT is created or updated
+    async jwt({ token, user }) {
+      if (user?.uuid) {
+        token.uuid = user.uuid;
+      }
+      return token;
+    },
+
+    // Called whenever `useSession()` is used
+    async session({ session, token }) {
+      if (token?.uuid && session && session.user) {
+        session.user.uuid =
+          typeof token.uuid === "string" ? token.uuid : undefined; // Expose in session
+      }
+      return session;
+    },
   },
 };
+
+export default NextAuth(authOptions);

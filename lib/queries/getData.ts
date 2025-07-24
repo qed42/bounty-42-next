@@ -1,5 +1,4 @@
-// lib/queries/getData.ts
-import { DrupalNode } from "next-drupal";
+import { DrupalNode, DrupalTaxonomyTerm } from "next-drupal";
 import { gql } from "urql";
 import { drupal } from "../drupal";
 
@@ -100,5 +99,54 @@ export async function getProjectWithTeamMembersById(
   } catch (error) {
     console.error("Error fetching project by ID with team members:", error);
     return null;
+  }
+}
+
+export async function getTeamIdsForUserEmail(email: string): Promise<string[]> {
+  try {
+    const terms = await drupal.getResourceCollection<DrupalTaxonomyTerm[]>(
+      "taxonomy_term--project_teams",
+      {
+        params: {
+          "filter[field_team_members.mail]": email,
+          "fields[taxonomy_term--project_teams]": "id",
+        },
+      }
+    );
+
+    return terms.map((term) => term.id);
+  } catch (error) {
+    console.error("Error fetching teams by user email:", error);
+    return [];
+  }
+}
+
+export async function getProjectsForUserEmail(
+  email: string
+): Promise<boolean> {
+  const teamIds = await getTeamIdsForUserEmail(email);
+
+  if (teamIds.length === 0) return false;
+
+  const params: Record<string, string> = {
+    "filter[field_teams.id][operator]": "IN",
+    "fields[node--project]": "id,title,field_teams",
+    include: "field_teams",
+  };
+
+  teamIds.forEach((id, index) => {
+    params[`filter[field_teams.id][value][${index}]`] = id;
+  });
+
+  try {
+    const projects = await drupal.getResourceCollection<DrupalNode[]>(
+      "node--project",
+      { params }
+    );
+
+    return projects.length > 0;
+  } catch (error) {
+    console.error("Error fetching projects by email:", error);
+    return false;
   }
 }
