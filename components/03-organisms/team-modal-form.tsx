@@ -186,9 +186,9 @@ export default function TeamModalForm({
           }
         }}
       >
-        <DialogTrigger asChild>
+        {/* <DialogTrigger asChild>
           <Button className="cursor-pointer">Claim</Button>
-        </DialogTrigger>
+        </DialogTrigger> */}
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create New Team</DialogTitle>
