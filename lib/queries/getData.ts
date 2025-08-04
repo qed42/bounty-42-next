@@ -63,6 +63,16 @@ export const GET_PROJECT_BY_PATH = gql`
               title
               alt
             }
+            executionTracks {
+              ... on ParagraphProjectMilestone {
+                __typename
+                id
+                projectMentor {
+                  id
+                  mail
+                }
+              }
+            }
             teams {
               ... on TermProjectTeam {
                 id
@@ -121,9 +131,7 @@ export async function getTeamIdsForUserEmail(email: string): Promise<string[]> {
   }
 }
 
-export async function getProjectsForUserEmail(
-  email: string
-): Promise<boolean> {
+export async function getProjectsForUserEmail(email: string): Promise<boolean> {
   const teamIds = await getTeamIdsForUserEmail(email);
 
   if (teamIds.length === 0) return false;

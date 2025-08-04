@@ -54,6 +54,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
 
+  console.log(`PROJECT`, project);
+
   return (
     <AuthGuard>
       <div className="container mx-auto px-4 py-12 xl:py-20">
@@ -128,7 +130,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             )}
 
             {/* Be a Member Button / Claimed Status (Mobile View) */}
-            {/* {!isUserInProject ? (
+            {!isUserInProject ? (
               canUserBeAddedProject ? (
                 <div className="mt-8 text-center xl:hidden">
                   <TeamModalForm
@@ -145,7 +147,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">
                 You are already part of another bounty project.
               </p>
-            )} */}
+            )}
           </div>
 
           {/* Sidebar (Desktop View) */}
@@ -194,7 +196,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               )}
 
               {/* Be a Member Button / Claimed Status - Desktop only */}
-              {/* {!isUserInProject ? (
+              {!isUserInProject ? (
                 canUserBeAddedProject ? (
                   <div className="mt-6 pt-6 border-t border-gray-200 text-center">
                     <TeamModalForm
@@ -211,7 +213,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
                   You are already part of another bounty project.
                 </p>
-              )} */}
+              )}
             </div>
           </aside>
         </div>
