@@ -158,3 +158,15 @@ export async function getProjectsForUserEmail(email: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function getProjectById(
+  id: string
+): Promise<DrupalNode | null> {
+  try {
+    const node = await drupal.getResource<DrupalNode>("node--project", id);
+    return node;
+  } catch (error) {
+    console.error("Error fetching article by ID:", error);
+    return null;
+  }
+}

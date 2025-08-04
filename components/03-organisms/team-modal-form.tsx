@@ -176,7 +176,7 @@ export default function TeamModalForm({
         milestones: validMilestones
       };
 
-      const res = await addTeamToProject(submitData, project, projectTeams);
+      const res = await addTeamToProject(submitData, project.id, projectTeams);
       if (!res?.success) {
         setGlobalMessage({
           text: res?.message || "Failed to create team",
@@ -194,7 +194,7 @@ export default function TeamModalForm({
         }, 3000);
 
         // Reset form
-        resetForm();
+        // resetForm();
       }
     } catch (error) {
       setGlobalMessage({

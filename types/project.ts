@@ -78,6 +78,7 @@ export interface TeamData {
   member1: string;
   member2: string;
   member3: string;
+  milestones: Milestone[]; // Added missing milestones property
 }
 
 export interface ProjectTeamMember {
@@ -105,4 +106,38 @@ export interface Project {
     id: string;
     type?: string;
   }[];
+}
+
+export interface Milestone {
+  title: string;
+  description: string;
+}
+
+export interface ProjectTeamEntity {
+  id: string;
+}
+
+export interface DrupalResource {
+  id: string;
+  type: string;
+  drupal_internal__id: string;
+  drupal_internal__revision_id: string;
+}
+
+export interface ErrorResult {
+  success: false;
+  message: string;
+}
+
+export interface SuccessResult extends DrupalResource {
+  success?: never; // This ensures success result doesn't have success property
+}
+
+export interface MilestoneResult {
+  success: boolean;
+  id?: string;
+  type?: string;
+  drupal_internal__id?: string;
+  drupal_internal__revision_id?: string;
+  message?: string;
 }

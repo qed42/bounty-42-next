@@ -54,8 +54,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
 
-  console.log(`PROJECT`, project);
-
   return (
     <AuthGuard>
       <div className="container mx-auto px-4 py-12 xl:py-20">
