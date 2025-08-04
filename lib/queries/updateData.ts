@@ -1,9 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// "use server";
+"use server";
 
-import { Project, ProjectTeam, TeamData, TeamMember } from "@/types/project";
+import {
+  ErrorResult,
+  Milestone,
+  MilestoneResult,
+  ProjectTeam,
+  ProjectTeamEntity,
+  SuccessResult,
+  TeamData,
+  TeamMember,
+} from "@/types/project";
 import { drupal } from "../drupal";
 import { getUsername } from "@/utils/helpers";
+import { getProjectById } from "./getData";
 
 // Creates users in Drupal from a list of email addresses.
 const createUsersInDrupal = async (userEmails: string[] = []) => {
@@ -57,7 +67,6 @@ export const createProjectTeam = async (
   }
 
   try {
-    // FIXME: Maybe find a way to improve this GET request, move it to a server based fetch maybe.
     // Step 1: Fetch all existing project teams
     const existingTeams = await drupal.getResourceCollection(
       "taxonomy_term--project_teams",
@@ -157,15 +166,14 @@ export async function checkIfMemberExists(
   return null;
 }
 
-// const testProject = [
-//   { id: 1, title: 'Milestone 1', description: '- Setup project' },
-//   { id: 2, title: 'Mileston 2', description: '- Setup DB' }
-// ]
-
-async function handleProjectMilestones(milestones: any, projectTeam: any) {
-  // 1: Create para--milestoneS in Drupal.
-  const createMilestoneParagraphs = await Promise.all(
-    milestones.map(async (milestone) => {
+// Handles the creation of project milestones and their relationships.
+async function handleProjectMilestones(
+  milestones: Milestone[],
+  projectTeam: ProjectTeamEntity
+): Promise<ErrorResult | SuccessResult | any> {
+  // 1: Create paragraph--milestone paragraphs in Drupal
+  const milestoneResults = await Promise.all(
+    milestones.map(async (milestone): Promise<MilestoneResult> => {
       try {
         const response = await drupal.createResource("paragraph--milestone", {
           data: {
@@ -177,88 +185,103 @@ async function handleProjectMilestones(milestones: any, projectTeam: any) {
           },
         });
 
-        const { id, type, drupal_internal__id, drupal_internal__revision_id } =
-          response;
-
         return {
           success: true,
-          id,
-          type,
-          drupal_internal__id,
-          drupal_internal__revision_id,
+          id: response.id,
+          type: response.type,
+          drupal_internal__id: response.drupal_internal__id,
+          drupal_internal__revision_id: response.drupal_internal__revision_id,
         };
-      } catch (error: any) {
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Unknown error while creating milestone";
         console.error(
           "Failed to create milestone paragraph:",
           milestone,
           error
         );
+
         return {
           success: false,
-          message: error?.message || "Unknown error while creating milestone.",
+          message: errorMessage,
         };
       }
     })
   );
 
-  if (
-    createMilestoneParagraphs[0] &&
-    createMilestoneParagraphs[0].success === false
-  ) {
+  // 2; Check if any milestone creation failed
+  const failedResult = milestoneResults.find((result) => !result.success);
+  if (failedResult) {
     return {
       success: false,
-      message:
-        createMilestoneParagraphs[0].message || "Failed to create milestones.",
+      message: failedResult.message || "Failed to create milestones",
     };
   }
 
-  const paraMilestones = createMilestoneParagraphs
-    .filter((item) => item.success)
-    .map((item) => ({
-      type: item.type,
-      id: item.id,
+  // 3: Transform successful results for Drupal relationships
+  const milestoneReferences: any = milestoneResults
+    .filter((result): result is Required<MilestoneResult> => result.success)
+    .map((result) => ({
+      type: result.type,
+      id: result.id,
       meta: {
-        target_revision_id: item.drupal_internal__revision_id,
-        drupal_internal__target_id: item.drupal_internal__id,
+        target_revision_id: result.drupal_internal__revision_id,
+        drupal_internal__target_id: result.drupal_internal__id,
       },
     }));
 
-  // 2: Add team ID, mentor ID, and milestones ID to project-milestones paragraph.
-  const ProjectMilestones = await drupal.createResource(
-    "paragraph--project_milestones",
-    {
-      data: {
-        type: "paragraph--project_milestones",
-        relationships: {
-          field_execution_plan: {
-            data: paraMilestones,
-          },
-          field_team: {
-            data: {
-              type: "taxonomy_term--project_teams",
-              id: projectTeam.id,
+  // 3: Create project milestones paragraph with team and paragraph--project_milestones relationships
+  try {
+    const projectMilestones = await drupal.createResource(
+      "paragraph--project_milestones",
+      {
+        data: {
+          type: "paragraph--project_milestones",
+          relationships: {
+            field_execution_plan: {
+              data: milestoneReferences,
+            },
+            field_team: {
+              data: {
+                type: "taxonomy_term--project_teams",
+                id: projectTeam.id,
+              },
             },
           },
         },
-      },
-    }
-  );
+      }
+    );
 
-  const { id, type, drupal_internal__id, drupal_internal__revision_id } =
-    ProjectMilestones;
-  return { id, type, drupal_internal__id, drupal_internal__revision_id };
-  // 3: Attach project-milestones under execution tracks under the final project.
+    return {
+      id: projectMilestones.id,
+      type: projectMilestones.type,
+      drupal_internal__id: projectMilestones.drupal_internal__id,
+      drupal_internal__revision_id:
+        projectMilestones.drupal_internal__revision_id,
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to create project milestones";
+    return {
+      success: false,
+      message: errorMessage,
+    };
+  }
 }
 
 // Main function to add a team to a project after validation and creation.
 export async function addTeamToProject(
   teamData: TeamData,
-  project: Project,
+  projectId: string,
   allProjectTeams: ProjectTeam[]
 ) {
   const { member1, member2, member3, teamName, milestones } = teamData;
   const teamMails = [member1, member2, member3];
-  const projectId = project.id;
+  const projectData = await getProjectById(projectId);
 
   // 1: Check whether any new members are already part of the project via another team.
   const existingMembers = await Promise.all(
@@ -274,7 +297,7 @@ export async function addTeamToProject(
 
     return {
       success: false,
-      data: project,
+      data: projectData,
       userMail: doesMemberExist.map((member) => member.email),
       message,
     };
@@ -296,11 +319,16 @@ export async function addTeamToProject(
   );
 
   let updatedExecutionPlan: any = [];
-  if (project?.executionTracks != null) {
-    const exisitingExecutionPlan = project?.executionTracks?.map(
+  if (projectData?.field_execution_tracks != null) {
+    const exisitingExecutionPlan = projectData?.field_execution_tracks?.map(
       (track: any) => ({
         type: track.type || "paragraph--project_milestones",
         id: track.id,
+        meta: {
+          target_revision_id: track.resourceIdObjMeta.target_revision_id,
+          drupal_internal__target_id:
+            track.resourceIdObjMeta.drupal_internal__target_id,
+        },
       })
     );
     updatedExecutionPlan = [
