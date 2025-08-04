@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use server";
+// "use server";
 
 import { Project, ProjectTeam, TeamData, TeamMember } from "@/types/project";
 import { drupal } from "../drupal";
@@ -157,13 +157,106 @@ export async function checkIfMemberExists(
   return null;
 }
 
+// const testProject = [
+//   { id: 1, title: 'Milestone 1', description: '- Setup project' },
+//   { id: 2, title: 'Mileston 2', description: '- Setup DB' }
+// ]
+
+async function handleProjectMilestones(milestones: any, projectTeam: any) {
+  // 1: Create para--milestoneS in Drupal.
+  const createMilestoneParagraphs = await Promise.all(
+    milestones.map(async (milestone) => {
+      try {
+        const response = await drupal.createResource("paragraph--milestone", {
+          data: {
+            type: "paragraph--milestone",
+            attributes: {
+              field_milestone_name: milestone.title,
+              field_milestone_details: milestone.description,
+            },
+          },
+        });
+
+        const { id, type, drupal_internal__id, drupal_internal__revision_id } =
+          response;
+
+        return {
+          success: true,
+          id,
+          type,
+          drupal_internal__id,
+          drupal_internal__revision_id,
+        };
+      } catch (error: any) {
+        console.error(
+          "Failed to create milestone paragraph:",
+          milestone,
+          error
+        );
+        return {
+          success: false,
+          message: error?.message || "Unknown error while creating milestone.",
+        };
+      }
+    })
+  );
+
+  if (
+    createMilestoneParagraphs[0] &&
+    createMilestoneParagraphs[0].success === false
+  ) {
+    return {
+      success: false,
+      message:
+        createMilestoneParagraphs[0].message || "Failed to create milestones.",
+    };
+  }
+
+  const paraMilestones = createMilestoneParagraphs
+    .filter((item) => item.success)
+    .map((item) => ({
+      type: item.type,
+      id: item.id,
+      meta: {
+        target_revision_id: item.drupal_internal__revision_id,
+        drupal_internal__target_id: item.drupal_internal__id,
+      },
+    }));
+
+  // 2: Add team ID, mentor ID, and milestones ID to project-milestones paragraph.
+  const ProjectMilestones = await drupal.createResource(
+    "paragraph--project_milestones",
+    {
+      data: {
+        type: "paragraph--project_milestones",
+        relationships: {
+          field_execution_plan: {
+            data: paraMilestones,
+          },
+          field_team: {
+            data: {
+              type: "taxonomy_term--project_teams",
+              id: projectTeam.id,
+            },
+          },
+        },
+      },
+    }
+  );
+
+  const { id, type, drupal_internal__id, drupal_internal__revision_id } =
+    ProjectMilestones;
+  return { id, type, drupal_internal__id, drupal_internal__revision_id };
+  // 3: Attach project-milestones under execution tracks under the final project.
+}
+
 // Main function to add a team to a project after validation and creation.
 export async function addTeamToProject(
   teamData: TeamData,
   project: Project,
   allProjectTeams: ProjectTeam[]
 ) {
-  const { member1, member2, member3, teamName } = teamData;
+  const { member1, member2, member3, teamName, milestones } = teamData;
   const teamMails = [member1, member2, member3];
   const projectId = project.id;
 
@@ -196,29 +289,45 @@ export async function addTeamToProject(
     return projectTeam;
   }
 
-  // 4: Attach projectTeam to the bounty project
-  const existingTeam: any =
-    project.teams?.map((member: any) => ({
-      type: member.type || "taxonomy_term--project_teams",
-      id: member.id,
-    })) ?? [];
-
-  const isAlreadyAdded = existingTeam.some(
-    (member: any) => member.id === projectTeam.id
+  // Handle milestones
+  const projectMilestones = await handleProjectMilestones(
+    milestones,
+    projectTeam
   );
-  if (isAlreadyAdded) {
-    return {
-      success: false,
-      data: project,
-      message: "This team is already involved in the project.",
-    };
+
+  let updatedExecutionPlan: any = [];
+  if (project?.executionTracks != null) {
+    const exisitingExecutionPlan = project?.executionTracks?.map(
+      (track: any) => ({
+        type: track.type || "paragraph--project_milestones",
+        id: track.id,
+      })
+    );
+    updatedExecutionPlan = [
+      ...exisitingExecutionPlan,
+      {
+        type: projectMilestones.type,
+        id: projectMilestones.id,
+        meta: {
+          target_revision_id: projectMilestones.drupal_internal__revision_id,
+          drupal_internal__target_id: projectMilestones.drupal_internal__id,
+        },
+      },
+    ];
+  } else {
+    updatedExecutionPlan = [
+      {
+        type: projectMilestones.type,
+        id: projectMilestones.id,
+        meta: {
+          target_revision_id: projectMilestones.drupal_internal__revision_id,
+          drupal_internal__target_id: projectMilestones.drupal_internal__id,
+        },
+      },
+    ];
   }
 
-  const updatedTeam: any = [
-    ...existingTeam,
-    { type: "taxonomy_term--project_teams", id: projectTeam.id },
-  ];
-  const updated = await drupal.updateResource(
+  const updatedProject = await drupal.updateResource(
     "node--project",
     projectId,
     {
@@ -226,18 +335,17 @@ export async function addTeamToProject(
         type: "node--project",
         id: projectId,
         relationships: {
-          field_teams: {
-            data: updatedTeam,
+          field_execution_tracks: {
+            data: updatedExecutionPlan,
           },
         },
       },
-    },
-    { withAuth: true }
+    }
   );
 
   return {
     success: true,
-    data: updated,
-    message: "Project claimed successfully.",
+    data: updatedProject,
+    message: "Claimed accepted, please wait for someone to reach out.",
   };
 }
