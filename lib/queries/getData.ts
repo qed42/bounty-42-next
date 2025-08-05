@@ -101,7 +101,10 @@ export async function getProjectWithTeamMembersById(
   try {
     const node = await drupal.getResource<DrupalNode>("node--project", id, {
       params: {
-        include: ["field_teams", "field_teams.field_team_members"].join(","),
+        include: [
+          "field_teams.field_team_members",
+          "field_execution_tracks.field_team",
+        ].join(","),
       },
     });
 
@@ -159,9 +162,7 @@ export async function getProjectsForUserEmail(email: string): Promise<boolean> {
   }
 }
 
-export async function getProjectById(
-  id: string
-): Promise<DrupalNode | null> {
+export async function getProjectById(id: string): Promise<DrupalNode | null> {
   try {
     const node = await drupal.getResource<DrupalNode>("node--project", id);
     return node;
