@@ -63,6 +63,16 @@ export const GET_PROJECT_BY_PATH = gql`
               title
               alt
             }
+            executionTracks {
+              ... on ParagraphProjectMilestone {
+                __typename
+                id
+                projectMentor {
+                  id
+                  mail
+                }
+              }
+            }
             teams {
               ... on TermProjectTeam {
                 id
@@ -91,7 +101,10 @@ export async function getProjectWithTeamMembersById(
   try {
     const node = await drupal.getResource<DrupalNode>("node--project", id, {
       params: {
-        include: ["field_teams", "field_teams.field_team_members"].join(","),
+        include: [
+          "field_teams.field_team_members",
+          "field_execution_tracks.field_team",
+        ].join(","),
       },
     });
 
@@ -121,9 +134,7 @@ export async function getTeamIdsForUserEmail(email: string): Promise<string[]> {
   }
 }
 
-export async function getProjectsForUserEmail(
-  email: string
-): Promise<boolean> {
+export async function getProjectsForUserEmail(email: string): Promise<boolean> {
   const teamIds = await getTeamIdsForUserEmail(email);
 
   if (teamIds.length === 0) return false;
@@ -148,5 +159,15 @@ export async function getProjectsForUserEmail(
   } catch (error) {
     console.error("Error fetching projects by email:", error);
     return false;
+  }
+}
+
+export async function getProjectById(id: string): Promise<DrupalNode | null> {
+  try {
+    const node = await drupal.getResource<DrupalNode>("node--project", id);
+    return node;
+  } catch (error) {
+    console.error("Error fetching article by ID:", error);
+    return null;
   }
 }

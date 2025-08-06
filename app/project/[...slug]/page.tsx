@@ -12,6 +12,10 @@ import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
 
+interface ExecutionTrack {
+  field_team: unknown;
+}
+
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
 }
@@ -45,7 +49,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const response = await getProjectWithTeamMembersById(project.id);
-  const projectTeams = response?.field_teams ?? [];
+  // const projectTeams = response?.field_teams ?? [];
+  const projectTeams =
+    response?.field_execution_tracks?.map(
+      (track: ExecutionTrack) => track.field_team
+    ) || [];
 
   const isUserInProject = await getProjectsForUserEmail(
     session?.user?.email || ""
@@ -128,7 +136,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             )}
 
             {/* Be a Member Button / Claimed Status (Mobile View) */}
-            {/* {!isUserInProject ? (
+            {!isUserInProject ? (
               canUserBeAddedProject ? (
                 <div className="mt-8 text-center xl:hidden">
                   <TeamModalForm
@@ -145,7 +153,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">
                 You are already part of another bounty project.
               </p>
-            )} */}
+            )}
           </div>
 
           {/* Sidebar (Desktop View) */}
@@ -194,7 +202,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               )}
 
               {/* Be a Member Button / Claimed Status - Desktop only */}
-              {/* {!isUserInProject ? (
+              {!isUserInProject ? (
                 canUserBeAddedProject ? (
                   <div className="mt-6 pt-6 border-t border-gray-200 text-center">
                     <TeamModalForm
@@ -211,7 +219,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
                   You are already part of another bounty project.
                 </p>
-              )} */}
+              )}
             </div>
           </aside>
         </div>
