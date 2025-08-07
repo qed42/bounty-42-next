@@ -6,6 +6,21 @@ const TeamMilestoneDisplay = dynamic(() => import("./teamMilestoneDisplay"), {
   ssr: false,
 });
 
-export default function TeamMilestoneWrapper({ executionTracks }) {
+interface ExecutionTrack {
+  field_team: {
+    name: string;
+  };
+  field_execution_plan: Array<{
+    id: string;
+    field_milestone_name: string;
+    field_milestone_details: string;
+  }>;
+}
+
+interface TeamMilestoneWrapperProps {
+  executionTracks: ExecutionTrack[];
+}
+
+export default function TeamMilestoneWrapper({ executionTracks }: TeamMilestoneWrapperProps) {
   return <TeamMilestoneDisplay executionTracks={executionTracks} />;
 }
