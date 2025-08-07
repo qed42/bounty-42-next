@@ -34,9 +34,6 @@ function TeamMilestoneGroup({ teamName, tracks }) {
   return (
     <div className="p-5 bg-gray-50 rounded-xl shadow">
       <h3 className="text-xl font-bold mb-3">{teamName}</h3>
-      <h4 className="text-md text-gray-600 mb-2">
-        Mentor: {tracks[0]?.field_project_mentor?.display_name || "N/A"}
-      </h4>
       <div className="mb-6">
         <label
           htmlFor="milestone-select"
