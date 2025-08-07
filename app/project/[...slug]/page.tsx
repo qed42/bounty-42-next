@@ -11,6 +11,7 @@ import {
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
+import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapper";
 
 interface ExecutionTrack {
   field_team: unknown;
@@ -107,24 +108,25 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Project Image */}
-            <div className="relative w-full h-96 rounded-2xl overflow-hidden shadow-xl">
-              <Image
-                src={project.defaultImage?.url || "/image-placeholder.webp"}
-                alt="Project preview"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 75vw"
-                priority
-              />
-            </div>
-
             {/* Description */}
             <section className="p-5 space-y-6 bg-white rounded-2xl shadow-xl">
+              {/* Project Image */}
+              <div className="relative w-full h-96 overflow-hidden shadow-xl">
+                <Image
+                  src={project.defaultImage?.url || "/image-placeholder.webp"}
+                  alt="Project preview"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 75vw"
+                  priority
+                />
+              </div>
+
               <div
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
               />
+              <TeamMilestoneWrapper executionTracks={response?.field_execution_tracks} />
             </section>
 
             {/* Reward (Mobile View) */}
