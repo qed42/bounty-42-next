@@ -68,16 +68,16 @@ export const GET_PROJECT_BY_PATH = gql`
                 __typename
                 id
                 projectMentor {
-                  id
+                    id
                   mail
                 }
               }
             }
             teams {
-              ... on TermProjectTeam {
-                id
-                name
-                teamMembers {
+                  ... on TermProjectTeam {
+                    id
+                    name
+                    teamMembers {
                   id
                   name
                   mail
@@ -104,6 +104,8 @@ export async function getProjectWithTeamMembersById(
         include: [
           "field_teams.field_team_members",
           "field_execution_tracks.field_team",
+          "field_execution_tracks.field_project_mentor",
+          "field_execution_tracks.field_execution_plan",
         ].join(","),
       },
     });
