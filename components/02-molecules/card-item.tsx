@@ -9,6 +9,7 @@ import type { CardItemProps } from "@/types/project";
 
 export function CardItem({
   title,
+  index,
   description,
   category,
   image,
@@ -45,15 +46,7 @@ export function CardItem({
 
           {/* Category */}
           <div
-            className={`project-category w-max absolute top-4 right-4 text-xs ${
-              category.toLowerCase().replace(/\s+/g, '') === 'pool1'
-                ? 'project-category--1'
-                : category.toLowerCase().replace(/\s+/g, '') === 'pool2'
-                ? 'project-category--2'
-                : category.toLowerCase().replace(/\s+/g, '') === 'pool3'
-                ? 'project-category--3'
-                : 'text-black'
-            }`}
+            className={`project-category w-max absolute top-4 right-4 text-xs project-category--${index}`}
           >
             {category}
           </div>

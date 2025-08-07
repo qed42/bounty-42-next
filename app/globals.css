@@ -242,15 +242,15 @@
     @apply text-center px-4 py-[2px] text-[16px] rounded-full text-sm font-medium text-white;
   }
 
-  .project-category--1 {
+  .project-category--0 {
     @apply bg-red-600
   }
 
-  .project-category--2 {
+  .project-category--1 {
     @apply bg-lime-700;
   }
 
-  .project-category--3 {
+  .project-category--2 {
     @apply bg-yellow-600;
   }
 

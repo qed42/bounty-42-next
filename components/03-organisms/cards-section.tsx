@@ -38,8 +38,8 @@ export function CardsSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-7">
-        {cards.map((card) => (
-          <CardItem key={card.id} {...card} />
+        {cards.map((card, index) => (
+          <CardItem key={card.id} index={index} {...card} />
         ))}
       </div>
 

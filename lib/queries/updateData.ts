@@ -140,8 +140,8 @@ export async function checkIfMemberExists(
   email: string
 ) {
   for (const team of projectTeams) {
-    const match = team.field_team_members.find(
-      (member) => member.mail.toLowerCase() === email.toLowerCase()
+    const match = team?.field_team_members.find(
+      (member) => member?.mail?.toLowerCase() === email?.toLowerCase()
     );
 
     if (match) {

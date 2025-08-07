@@ -45,6 +45,7 @@ export type CardsSectionProps = {
 
 export type CardItemProps = {
   id: string;
+  index: number;
   title: string;
   description: string;
   category: string;
