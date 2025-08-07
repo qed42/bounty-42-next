@@ -38,7 +38,7 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          {/* <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-purple-600">500+</div>
               <div className="text-gray-600">Active Projects</div>
@@ -51,7 +51,7 @@ export default function HomePage() {
               <div className="text-3xl font-bold text-purple-600">10K+</div>
               <div className="text-gray-600">Developers</div>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
