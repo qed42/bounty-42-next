@@ -11,9 +11,13 @@ import {
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
+import { canUserAccessProjectUpdates } from "@/lib/utils";
 
 interface ExecutionTrack {
-  field_team: unknown;
+  field_team: {
+    field_team_members: Array<{ mail: string }>;
+  };
+  field_selected: boolean;
 }
 
 interface PageProps {
@@ -49,11 +53,23 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const response = await getProjectWithTeamMembersById(project.id);
-  // const projectTeams = response?.field_teams ?? [];
+
   const projectTeams =
     response?.field_execution_tracks?.map(
       (track: ExecutionTrack) => track.field_team
     ) || [];
+
+  // Selected Track
+  const [selectedProjectTrack] = response?.field_execution_tracks?.filter(
+    (track: ExecutionTrack) => track.field_selected
+  );
+  // Selected Project Team Members
+  const selectedProjectTeamMembers =
+    selectedProjectTrack != null
+      ? selectedProjectTrack?.field_team?.field_team_members?.map(
+          (team: { mail: string }) => team.mail
+        )
+      : [];
 
   const isUserInProject = await getProjectsForUserEmail(
     session?.user?.email || ""
@@ -61,6 +77,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
+
+  const canUserAccessProjectUpdate = canUserAccessProjectUpdates(
+    selectedProjectTeamMembers,
+    session?.user?.email
+  );
+
+  console.log(`LOGGED IN USER`, session);
+  console.log(`DRUPAL RESPONSE`, canUserAccessProjectUpdate);
 
   return (
     <AuthGuard>
@@ -83,23 +107,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
                     {/* Category */}
-                    <div
-                      className={`project-category w-max ${
-                        project.category.name
-                          .toLowerCase()
-                          .replace(/\s+/g, "") === "pool1"
-                          ? "project-category--1"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool2"
-                          ? "project-category--2"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool3"
-                          ? "project-category--3"
-                          : "text-black"
-                      }`}
-                    >
+                    <div className={`w-max text-black`}>
                       {project.category.name}
                     </div>
                   </div>
@@ -168,23 +176,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-lg">
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
-                    <div
-                      className={`project-category w-max ${
-                        project.category.name
-                          .toLowerCase()
-                          .replace(/\s+/g, "") === "pool1"
-                          ? "project-category--1"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool2"
-                          ? "project-category--2"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool3"
-                          ? "project-category--3"
-                          : "text-black"
-                      }`}
-                    >
+                    <div className={`w-max text-black`}>
                       {project.category.name}
                     </div>
                   </div>
