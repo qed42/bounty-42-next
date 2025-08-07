@@ -67,10 +67,6 @@ export const GET_PROJECT_BY_PATH = gql`
               ... on ParagraphProjectMilestone {
                 __typename
                 id
-                projectMentor {
-                  id
-                  mail
-                }
               }
             }
             teams {
@@ -103,7 +99,8 @@ export async function getProjectWithTeamMembersById(
       params: {
         include: [
           "field_teams.field_team_members",
-          "field_execution_tracks.field_team",
+          "field_execution_tracks.field_team.field_team_members",
+          "field_execution_tracks.field_execution_plan",
         ].join(","),
       },
     });
