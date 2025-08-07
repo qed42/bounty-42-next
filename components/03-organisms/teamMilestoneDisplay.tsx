@@ -2,7 +2,42 @@
 
 import { useState, useEffect } from "react";
 
-export default function TeamMilestoneDisplay({ executionTracks }) {
+interface Comment {
+  name: string;
+  text: string;
+}
+
+interface Milestone {
+  id: string;
+  field_milestone_name: string;
+  field_milestone_details: string;
+}
+
+interface ExecutionTrack {
+  field_team: {
+    name: string;
+  };
+  field_execution_plan: Milestone[];
+}
+
+interface MilestoneData {
+  status: string;
+  comments: Comment[];
+  newComment: string;
+  notify: boolean;
+}
+
+interface ProcessedMilestone {
+  id: string;
+  name: string;
+  details: string;
+}
+
+interface TeamMilestoneDisplayProps {
+  executionTracks: ExecutionTrack[];
+}
+
+export default function TeamMilestoneDisplay({ executionTracks }: TeamMilestoneDisplayProps) {
   if (!executionTracks || executionTracks.length === 0) {
     return <p className="text-gray-600">No execution tracks found.</p>;
   }
@@ -17,7 +52,12 @@ export default function TeamMilestoneDisplay({ executionTracks }) {
   );
 }
 
-function TeamMilestoneGroup({ teamName, tracks }) {
+interface TeamMilestoneGroupProps {
+  teamName: string;
+  tracks: ExecutionTrack[];
+}
+
+function TeamMilestoneGroup({ teamName, tracks }: TeamMilestoneGroupProps) {
   const milestones = tracks
     .flatMap((track) => track?.field_execution_plan || [])
     .map((milestone) => ({
@@ -27,7 +67,7 @@ function TeamMilestoneGroup({ teamName, tracks }) {
     }))
     .filter((m) => m.id);
 
-  const [selectedId, setSelectedId] = useState(milestones[0]?.id);
+  const [selectedId, setSelectedId] = useState<string>(milestones[0]?.id || "");
 
   const defaultDummyComments = [
     {
@@ -52,9 +92,9 @@ function TeamMilestoneGroup({ teamName, tracks }) {
     },
   ];
 
-  const [milestoneData, setMilestoneData] = useState({});
+  const [milestoneData, setMilestoneData] = useState<Record<string, MilestoneData>>({});
 
-  const selectedMilestone = milestones.find((m) => m.id === selectedId);
+  const selectedMilestone = milestones.find((m: ProcessedMilestone) => m.id === selectedId);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -79,7 +119,7 @@ function TeamMilestoneGroup({ teamName, tracks }) {
     notify: false,
   };
 
-  const updateMilestoneData = (updatedFields) => {
+  const updateMilestoneData = (updatedFields: Partial<MilestoneData>) => {
     setMilestoneData((prev) => ({
       ...prev,
       [selectedId]: {
@@ -91,15 +131,15 @@ function TeamMilestoneGroup({ teamName, tracks }) {
 
   const handleSubmit = () => {
     if (data.newComment.trim()) {
-      const newEntry = {
-        user: "Current User",
+      const newEntry: Comment = {
+        name: "Current User",
         text: data.newComment.trim(),
       };
       const updatedComments = [...(data.comments || []), newEntry];
       updateMilestoneData({ comments: updatedComments, newComment: "" });
 
       console.log("=== Milestone Submission ===");
-      console.log("Milestone:", selectedMilestone.name);
+      console.log("Milestone:", selectedMilestone?.name);
       console.log("Status:", data.status);
       console.log("All Comments:", updatedComments);
       console.log("Notify Team:", data.notify);
@@ -124,7 +164,7 @@ function TeamMilestoneGroup({ teamName, tracks }) {
           value={selectedId}
           onChange={(e) => setSelectedId(e.target.value)}
         >
-          {milestones.map((m) => (
+          {milestones.map((m: ProcessedMilestone) => (
             <option key={m.id} value={m.id}>
               {m.name}
             </option>
@@ -205,7 +245,7 @@ function TeamMilestoneGroup({ teamName, tracks }) {
       {/* Existing Comments */}
       <div className="mb-4">
         <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-          {data.comments?.map((comment, index) => (
+          {data.comments?.map((comment: Comment, index: number) => (
             <div
               key={index}
               className="pl-3 border-l-2 border-primary bg-white py-1"
