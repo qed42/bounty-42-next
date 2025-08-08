@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-
+import { postCommentForMilestone } from "@/lib/queries/updateData"
+import { updateMilestoneStatus } from "@/lib/queries/updateData"
+import { Button } from "@/components/ui/button";
 
 function stripHtml(html: string) {
   if (!html) return "";
@@ -87,9 +89,11 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
       id: milestone.id,
       name: milestone.field_milestone_name,
       details: milestone.field_milestone_details,
-      status: track.field_milestone_status || "Not started", // ✅ now we can access track
+      // Try to get milestone-specific status instead of track-level
+      status: (milestone as any).field_milestone_status || track.field_milestone_status || "Not started",
     }))
   ).filter((m) => m.id);
+
 
   const options = ["Not started", "In-progress", "Completed"];
 
@@ -101,14 +105,20 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
     if (lower.includes("complete")) return "Completed";
     return options[0]; // default fallback
   }
-
-  const initialStatus = normalizeStatus(tracks[0]?.field_milestone_status);
-  const [status, setStatus] = useState(initialStatus);
-
-//   const initialStatus = tracks[0]?.field_milestone_status || "Not started";
-// console.log(initialStatus, 'initialStatus');
   const [selectedId, setSelectedId] = useState<string>(milestones[0]?.id || "");
-  // const [status, setStatus] = useState(initialStatus);
+
+  const getNormalizedStatus = (milestoneId: string) => {
+    const milestone = milestones.find(m => m.id === milestoneId);
+    if (!milestone) return options[0];
+    return normalizeStatus(milestone.status);
+  }
+
+  const [status, setStatus] = useState(() => getNormalizedStatus(selectedId));
+
+  const handleMilestoneChange = (id: string) => {
+    setSelectedId(id);
+    setStatus(getNormalizedStatus(id));
+  };
 
   const [comments, setComments] = useState<Comment[]>(initialComments || []);
   const [newComment, setNewComment] = useState("");
@@ -116,25 +126,50 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
 
   const selectedMilestone = milestones.find((m: ProcessedMilestone) => m.id === selectedId);
 
-  const handleSubmit = () => {
-    if (newComment.trim()) {
-      const newEntry: Comment = {
-        name: "Current User",
-        text: newComment.trim(),
-      };
-      const updatedComments = [...comments, newEntry];
-      setComments(updatedComments);
-      setNewComment("");
-
-      console.log("=== Submission ===");
-      console.log("Milestone:", selectedMilestone?.name);
-      console.log("Status:", status);
-      console.log("All Comments:", updatedComments);
-      console.log("Notify Team:", notify);
-      alert("Submitted! Check console.");
-    } else {
+  const handleSubmit = async () => {
+    if (!newComment.trim()) {
       alert("Please enter a comment before submitting.");
+      return;
     }
+
+    if (!selectedMilestone) {
+      alert("Please select a milestone.");
+      return;
+    }
+
+    // // Assume you have current user's Drupal UID somewhere - replace with your actual logic
+    // const currentUserUid = "current-user-uuid-here"; // Replace with real UID
+
+    // // 1. Post comment to Drupal
+    // const commentResult = await postCommentForMilestone({
+    //   milestoneId: selectedMilestone.id,
+    //   uid: currentUserUid,
+    //   text: newComment.trim(),
+    // });
+
+    // if (!commentResult.success) {
+    //   alert("Failed to post comment. Please try again.");
+    //   return;
+    // }
+
+    // 2. Update milestone status
+    const statusResult = await updateMilestoneStatus(selectedMilestone.id, status);
+
+    if (!statusResult.success) {
+      alert("Failed to update milestone status. Please try again.");
+      return;
+    }
+
+    // 3. Update local comments list state
+    const newEntry: Comment = {
+      name: "Current User", // Or get real user name
+      text: newComment.trim(),
+    };
+    const updatedComments = [...comments, newEntry];
+    setComments(updatedComments);
+    setNewComment("");
+
+    alert("Submitted! Milestone status and comment updated.");
   };
 
   return (
@@ -150,7 +185,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
           id="milestone-select"
           className="block w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-10 rounded-sm shadow-sm focus:outline-none"
           value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
+          onChange={(e) => handleMilestoneChange(e.target.value)}
         >
           {milestones.map((m: ProcessedMilestone) => (
             <option key={m.id} value={m.id}>
@@ -176,7 +211,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
           Status
         </label>
         <div className="flex gap-4" id="milestone-status">
-          {["Not started", "In-progress", "Completed"].map((s) => (
+          {options.map((s) => (
             <label key={s} className="inline-flex items-center gap-1 text-sm text-gray-800">
               <input
                 type="radio"
@@ -233,13 +268,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
       </div>
 
       {/* Submit */}
-      <button
-        type="button"
-        onClick={handleSubmit}
-        className="mt-2 px-5 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700"
-      >
-        Submit
-      </button>
+      <Button onClick={handleSubmit} className="cursor-pointer">Submit</Button>
     </div>
   );
 }

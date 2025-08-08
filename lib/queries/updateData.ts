@@ -11,7 +11,7 @@ import {
   TeamData,
   TeamMember,
 } from "@/types/project";
-import { drupal } from "../drupal";
+import { drupal } from "@/lib/drupal";
 import { getUsername } from "@/utils/helpers";
 import { getProjectById } from "./getData";
 
@@ -378,7 +378,6 @@ export async function addTeamToProject(
   };
 }
 
-
 export async function postCommentForMilestone({
   milestoneId,
   uid,
@@ -388,6 +387,7 @@ export async function postCommentForMilestone({
   uid: string; // Drupal user UUID
   text: string;
 }) {
+  debugger;
   try {
     const response = await drupal.createResource("comment--comment", {
       data: {
@@ -422,6 +422,25 @@ export async function postCommentForMilestone({
     return { success: true, comment: response };
   } catch (error) {
     console.error("Error posting comment:", error);
+    return { success: false, error };
+  }
+}
+
+export async function updateMilestoneStatus(milestoneId: string, status: string) {
+  const transformedStatus = status.replace(/[\s-]+/g, '_').toLowerCase();
+  try {
+    const response = await drupal.updateResource("paragraph--milestone", milestoneId, {
+      data: {
+        type: "paragraph--milestone",
+        id: milestoneId,
+        attributes: {
+          field_milestone_status: transformedStatus,
+        },
+      },
+    });
+    return { success: true, data: response };
+  } catch (error) {
+    console.error("Failed to update milestone status:", error);
     return { success: false, error };
   }
 }
