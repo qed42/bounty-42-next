@@ -206,6 +206,7 @@ export default function TeamModalForm({
           });
 
           setTimeout(() => {
+            window.location.reload();
             setOpen(false);
             onTeamCreated?.();
           }, 1500);
