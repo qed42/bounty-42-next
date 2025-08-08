@@ -19,8 +19,9 @@ interface ExecutionTrack {
 
 interface TeamMilestoneWrapperProps {
   executionTracks: ExecutionTrack[];
+  comments: DrupalComment[];
 }
 
-export default function TeamMilestoneWrapper({ executionTracks }: TeamMilestoneWrapperProps) {
-  return <TeamMilestoneDisplay executionTracks={executionTracks} />;
+export default function TeamMilestoneWrapper({ executionTracks, comments }: TeamMilestoneWrapperProps) {
+  return <TeamMilestoneDisplay executionTracks={executionTracks} comments={comments} />;
 }
