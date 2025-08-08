@@ -170,7 +170,6 @@ export async function getProjectById(id: string): Promise<DrupalNode | null> {
 }
 
 export async function getCommentsForEntity(entityId: string): Promise<DrupalComment[]> {
-  debugger;
   try {
     const comments = await drupal.getResourceCollection<DrupalComment[]>(
       "comment--comment",

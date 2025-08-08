@@ -40,8 +40,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     path: currentPath,
   });
 
-  console.log(`SESSION`, session)
-
   if (error || !data?.route?.entity) {
     notFound();
   }
