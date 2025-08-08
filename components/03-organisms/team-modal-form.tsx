@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useCallback, useMemo, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,19 +18,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "next-auth/react";
 import { addTeamToProject } from "@/lib/queries/updateData";
 import type { ProjectNode } from "@/types/project";
+import { Loader2, X, Plus } from "lucide-react";
+
+import type { ProjectTeam } from "@/types/project";
 
 interface TeamModalFormProps {
   project: ProjectNode;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  projectTeams: any;
+  projectTeams: ProjectTeam[];
+  onTeamCreated?: () => void;
 }
 
 interface ValidationErrors {
   teamName?: string;
+  teamType?: string;
   member1?: string;
   member2?: string;
   member3?: string;
   milestones?: { [key: number]: { title?: string; description?: string } };
+}
+
+type TeamType = "solo" | "team";
+
+interface FormData {
+  teamName: string;
+  teamType: TeamType;
+  member1: string;
+  member2: string;
+  member3: string;
 }
 
 interface Milestone {
@@ -42,8 +56,10 @@ interface Milestone {
 export default function TeamModalForm({
   project,
   projectTeams,
+  onTeamCreated,
 }: TeamModalFormProps) {
   const { data: session } = useSession();
+  const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<"team" | "milestones">("team");
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -51,42 +67,42 @@ export default function TeamModalForm({
     text: string;
     type: "success" | "error";
   } | null>(null);
-  const [formData, setFormData] = useState({
+  
+  const initialFormData: FormData = useMemo(() => ({
     teamName: "",
-    teamType: "solo" as "solo" | "team",
+    teamType: "solo",
     member1: session?.user?.email || "",
     member2: "",
     member3: "",
-  });
+  }), [session?.user?.email]);
+  
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   const [milestones, setMilestones] = useState<Milestone[]>([
     { id: 1, title: "", description: "" }
   ]);
 
-  const validateEmail = (email: string): boolean => {
-    if (!email.trim()) return true; // Empty emails are optional except for member1
+  const validateEmail = useCallback((email: string): boolean => {
+    if (!email.trim()) return true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  };
+  }, []);
 
-  const validateTeamForm = (): boolean => {
+  const validateTeamForm = useCallback((): boolean => {
     const newErrors: ValidationErrors = {};
-    setGlobalMessage(null); // Clear global error
+    setGlobalMessage(null);
 
-    // Validate team name
     if (!formData.teamName.trim()) {
       newErrors.teamName = "Team name is required";
     } else if (formData.teamName.trim().length < 2) {
       newErrors.teamName = "Team name must be at least 2 characters long";
     }
 
-    // Validate member1 (always required)
     if (!formData.member1.trim()) {
       newErrors.member1 = "Member email is required";
     } else if (!validateEmail(formData.member1)) {
       newErrors.member1 = "Please enter a valid email address";
     }
 
-    // Validate member2 and member3 for team type
     if (formData.teamType === "team") {
       if (formData.member2.trim() && !validateEmail(formData.member2)) {
         newErrors.member2 = "Please enter a valid email address";
@@ -95,7 +111,6 @@ export default function TeamModalForm({
         newErrors.member3 = "Please enter a valid email address";
       }
 
-      // Check for duplicate emails in team type
       const emails = [formData.member1, formData.member2, formData.member3]
         .filter((email) => email.trim())
         .map((email) => email.toLowerCase().trim());
@@ -106,18 +121,19 @@ export default function TeamModalForm({
           text: "Duplicate email addresses are not allowed",
           type: "error",
         });
+        setErrors(newErrors);
+        return false;
       }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0 && !globalMessage;
-  };
+    return Object.keys(newErrors).length === 0;
+  }, [formData, validateEmail]);
 
-  const validateMilestonesForm = (): boolean => {
+  const validateMilestonesForm = useCallback((): boolean => {
     const newErrors: ValidationErrors = { milestones: {} };
     setGlobalMessage(null);
 
-    // Check if at least one milestone has both title and description
     const hasValidMilestone = milestones.some(
       milestone => milestone.title.trim() && milestone.description.trim()
     );
@@ -127,10 +143,11 @@ export default function TeamModalForm({
         text: "At least one milestone with both title and description is required",
         type: "error",
       });
+      setErrors(newErrors);
+      return false;
     }
 
-    // Validate individual milestones that have content
-    milestones.forEach((milestone, index) => {
+    milestones.forEach((milestone) => {
       const milestoneErrors: { title?: string; description?: string } = {};
       
       if (milestone.title.trim() || milestone.description.trim()) {
@@ -148,98 +165,88 @@ export default function TeamModalForm({
     });
 
     setErrors(newErrors);
-    return Object.keys(newErrors.milestones || {}).length === 0 && !globalMessage;
-  };
+    return Object.keys(newErrors.milestones || {}).length === 0;
+  }, [milestones]);
 
-  const handleTeamSubmit = (e: React.FormEvent) => {
+  const handleTeamSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (validateTeamForm()) {
       setCurrentStep("milestones");
     }
-  };
+  }, [validateTeamForm]);
 
-  const handleFinalSubmit = async (e: React.FormEvent) => {
+  const handleFinalSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateMilestonesForm()) {
       return;
     }
 
-    try {
-      // Filter out empty milestones
-      const validMilestones = milestones.filter(
-        milestone => milestone.title.trim() && milestone.description.trim()
-      );
+    startTransition(async () => {
+      try {
+        const validMilestones = milestones.filter(
+          milestone => milestone.title.trim() && milestone.description.trim()
+        );
 
-      const submitData = {
-        ...formData,
-        milestones: validMilestones
-      };
+        const submitData = {
+          ...formData,
+          milestones: validMilestones
+        };
 
-      const res = await addTeamToProject(submitData, project.id, projectTeams);
-      if (!res?.success) {
+        const res = await addTeamToProject(submitData, project.id, projectTeams);
+        if (!res?.success) {
+          setGlobalMessage({
+            text: res?.message || "Failed to create team",
+            type: "error",
+          });
+        } else {
+          setGlobalMessage({
+            text: "Team created successfully!",
+            type: "success",
+          });
+
+          setTimeout(() => {
+            setOpen(false);
+            onTeamCreated?.();
+          }, 1500);
+        }
+      } catch (error) {
         setGlobalMessage({
-          text: res?.message || "Failed to create team",
+          text: "Failed to create team. Please try again.",
           type: "error",
         });
-      } else {
-        setGlobalMessage({
-          text: "Team created successfully! Redirecting...",
-          type: "success",
-        });
-
-        setTimeout(() => {
-          window.location.reload();
-          setOpen(false);
-        }, 3000);
-
-        // Reset form
-        // resetForm();
+        console.error("Team creation error:", error);
       }
-    } catch (error) {
-      setGlobalMessage({
-        text: "Failed to create team. Please try again.",
-        type: "error",
-      });
-      console.error("Team creation error:", error);
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      teamName: "",
-      teamType: "solo",
-      member1: session?.user?.email || "",
-      member2: "",
-      member3: "",
     });
+  }, [validateMilestonesForm, milestones, formData, project.id, projectTeams, onTeamCreated]);
+
+  const resetForm = useCallback(() => {
+    setFormData(initialFormData);
     setMilestones([{ id: 1, title: "", description: "" }]);
     setErrors({});
     setGlobalMessage(null);
     setCurrentStep("team");
-  };
+  }, [initialFormData]);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: keyof FormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // Clear error for this field when user starts typing
-    if (errors[field as keyof ValidationErrors]) {
+    if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
         [field]: undefined,
       }));
     }
 
-    // Clear global message when user starts typing
     if (globalMessage) {
       setGlobalMessage(null);
     }
-  };
+  }, [errors, globalMessage]);
 
-  const handleMilestoneChange = (id: number, field: "title" | "description", value: string) => {
+  const handleMilestoneChange = useCallback((id: number, field: "title" | "description", value: string) => {
     setMilestones(prev => 
       prev.map(milestone => 
         milestone.id === id 
@@ -248,7 +255,6 @@ export default function TeamModalForm({
       )
     );
 
-    // Clear errors for this milestone when user starts typing
     if (errors.milestones?.[id]?.[field]) {
       setErrors(prev => ({
         ...prev,
@@ -262,24 +268,22 @@ export default function TeamModalForm({
       }));
     }
 
-    // Clear global message when user starts typing
     if (globalMessage) {
       setGlobalMessage(null);
     }
-  };
+  }, [errors.milestones, globalMessage]);
 
-  const addNewMilestone = () => {
+  const addNewMilestone = useCallback(() => {
     const newId = Math.max(...milestones.map(m => m.id)) + 1;
     setMilestones(prev => [
       ...prev,
       { id: newId, title: "", description: "" }
     ]);
-  };
+  }, [milestones]);
 
-  const removeMilestone = (id: number) => {
+  const removeMilestone = useCallback((id: number) => {
     if (milestones.length > 1) {
       setMilestones(prev => prev.filter(milestone => milestone.id !== id));
-      // Remove errors for this milestone
       setErrors(prev => {
         const newErrors = { ...prev };
         if (newErrors.milestones) {
@@ -288,13 +292,13 @@ export default function TeamModalForm({
         return newErrors;
       });
     }
-  };
+  }, [milestones.length]);
 
-  const goBackToTeam = () => {
+  const goBackToTeam = useCallback(() => {
     setCurrentStep("team");
     setErrors({});
     setGlobalMessage(null);
-  };
+  }, []);
 
   return (
     <div className="flex items-center justify-center p-4">
@@ -310,12 +314,15 @@ export default function TeamModalForm({
         <DialogTrigger asChild>
           <Button className="cursor-pointer">Claim</Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+        <DialogContent 
+          className="sm:max-w-[600px] max-h-[80vh]"
+          aria-describedby="team-modal-description"
+        >
           <DialogHeader>
             <DialogTitle>
               {currentStep === "team" ? "Create New Team" : "Project Milestones"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="team-modal-description">
               {currentStep === "team" 
                 ? "Enter your team details below. Click next when you're done."
                 : "Define your project milestones. At least one milestone is required."
@@ -344,7 +351,7 @@ export default function TeamModalForm({
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Team Type</Label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-6">
                     <div className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -352,15 +359,10 @@ export default function TeamModalForm({
                         name="teamType"
                         value="solo"
                         checked={formData.teamType === "solo"}
-                        onChange={(e) =>
-                          handleInputChange("teamType", e.target.value)
-                        }
+                        onChange={(e) => handleInputChange("teamType", e.target.value as TeamType)}
                         className="h-4 w-4"
                       />
-                      <Label
-                        htmlFor="solo"
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor="solo" className="text-sm font-normal cursor-pointer">
                         Solo
                       </Label>
                     </div>
@@ -371,15 +373,10 @@ export default function TeamModalForm({
                         name="teamType"
                         value="team"
                         checked={formData.teamType === "team"}
-                        onChange={(e) =>
-                          handleInputChange("teamType", e.target.value)
-                        }
+                        onChange={(e) => handleInputChange("teamType", e.target.value as TeamType)}
                         className="h-4 w-4"
                       />
-                      <Label
-                        htmlFor="team"
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor="team" className="text-sm font-normal cursor-pointer">
                         Team
                       </Label>
                     </div>
@@ -486,11 +483,19 @@ export default function TeamModalForm({
                   variant="outline"
                   className="cursor-pointer"
                   onClick={() => setOpen(false)}
+                  disabled={isPending}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="cursor-pointer">
-                  Next
+                <Button type="submit" className="cursor-pointer" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Next"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -510,9 +515,10 @@ export default function TeamModalForm({
                             variant="outline"
                             size="sm"
                             onClick={() => removeMilestone(milestone.id)}
-                            className="h-6 w-6 p-0 cursor-pointer"
+                            className="h-8 w-8 p-0 cursor-pointer"
+                            aria-label={`Remove milestone ${index + 1}`}
                           >
-                            ×
+                            <X className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -566,7 +572,9 @@ export default function TeamModalForm({
                   variant="outline"
                   onClick={addNewMilestone}
                   className="cursor-pointer w-full"
+                  disabled={isPending}
                 >
+                  <Plus className="h-4 w-4 mr-2" />
                   Add New Milestone
                 </Button>
               </div>
@@ -591,11 +599,19 @@ export default function TeamModalForm({
                   variant="outline"
                   className="cursor-pointer"
                   onClick={goBackToTeam}
+                  disabled={isPending}
                 >
                   Back
                 </Button>
-                <Button type="submit" className="cursor-pointer">
-                  Submit
+                <Button type="submit" className="cursor-pointer" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Team...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
                 </Button>
               </DialogFooter>
             </form>

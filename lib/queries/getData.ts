@@ -67,10 +67,6 @@ export const GET_PROJECT_BY_PATH = gql`
               ... on ParagraphProjectMilestone {
                 __typename
                 id
-                projectMentor {
-                  id
-                  mail
-                }
               }
             }
             teams {
