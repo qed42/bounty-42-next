@@ -11,7 +11,7 @@ import {
   TeamData,
   TeamMember,
 } from "@/types/project";
-import { drupal } from "@/lib/drupal";
+import { drupal } from "../drupal";
 import { getUsername } from "@/utils/helpers";
 import { getProjectById } from "./getData";
 
@@ -379,49 +379,55 @@ export async function addTeamToProject(
 }
 
 export async function postCommentForMilestone({
-  milestoneId,
+  projectNodeId,
   uid,
   text,
 }: {
-  milestoneId: string;
-  uid: string; // Drupal user UUID
+  projectNodeId: string;
+  uid: string;
   text: string;
 }) {
-  debugger;
   try {
-    const response = await drupal.createResource("comment--comment", {
-      data: {
-        type: "comment--comment",
-        attributes: {
-          subject: `Comment on milestone ${milestoneId}`,
-          comment_type: "comment", // default
-          entity_type: "paragraph",
-          field_name: "field_comments", // must match your comment field machine name
-          comment_body: {
-            value: text,
-            format: "basic_html",
+    const data = {
+      attributes: {
+        subject: `Comment on project ${projectNodeId}`,
+        comment_type: 'comment',
+        field_name: 'field_comments',
+        comment_body: {
+          value: text,
+          format: 'basic_html',
+        },
+        status: true,
+      },
+      relationships: {
+        entity_id: {
+          data: {
+            type: 'node--project',
+            id: projectNodeId,
           },
         },
-        relationships: {
-          entity_id: {
-            data: {
-              type: "paragraph--milestone",
-              id: milestoneId,
-            },
+        uid: {
+          data: {
+            type: 'user--user',
+            id: uid,
           },
-          uid: {
-            data: {
-              type: "user--user",
-              id: uid,
-            },
+        },
+        comment_type: {
+          data: {
+            type: 'comment_type--comment_type',
+            id: '9aca1e6d-6c27-42ef-8d90-e95885c48324',
           },
         },
       },
-    });
+    };
+console.log('Drupal client:', drupal);
 
-    return { success: true, comment: response };
+    console.log(data, 'comment payload');
+    const createdComment = await drupal.createResource('comment--comment', data);
+
+    return { success: true, comment: createdComment };
   } catch (error) {
-    console.error("Error posting comment:", error);
+    console.error('Error posting comment:', error);
     return { success: false, error };
   }
 }

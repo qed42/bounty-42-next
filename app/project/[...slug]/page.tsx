@@ -127,7 +127,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
               />
-              <TeamMilestoneWrapper executionTracks={response?.field_execution_tracks} comments={comments} />
+              <TeamMilestoneWrapper executionTracks={response?.field_execution_tracks} comments={comments} projectNodeId={project.id} />
             </section>
 
             {/* Reward (Mobile View) */}
