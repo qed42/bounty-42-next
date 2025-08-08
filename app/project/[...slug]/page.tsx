@@ -12,7 +12,7 @@ import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
 import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapper";
-
+import { getCommentsForEntity } from "@/lib/queries/getData";
 interface ExecutionTrack {
   field_team: unknown;
 }
@@ -52,6 +52,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const response = await getProjectWithTeamMembersById(project.id);
+  const comments = await getCommentsForEntity(project.id);
   // const projectTeams = response?.field_teams ?? [];
   const projectTeams =
     response?.field_execution_tracks?.map(
@@ -128,7 +129,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
               />
-              <TeamMilestoneWrapper executionTracks={response?.field_execution_tracks} />
+              <TeamMilestoneWrapper executionTracks={response?.field_execution_tracks} comments={comments} />
             </section>
 
             {/* Reward (Mobile View) */}

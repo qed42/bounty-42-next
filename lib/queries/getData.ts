@@ -1,4 +1,4 @@
-import { DrupalNode, DrupalTaxonomyTerm } from "next-drupal";
+import { DrupalNode, DrupalTaxonomyTerm, DrupalComment } from "next-drupal";
 import { gql } from "urql";
 import { drupal } from "../drupal";
 
@@ -67,10 +67,6 @@ export const GET_PROJECT_BY_PATH = gql`
               ... on ParagraphProjectMilestone {
                 __typename
                 id
-                projectMentor {
-                    id
-                  mail
-                }
               }
             }
             teams {
@@ -170,5 +166,24 @@ export async function getProjectById(id: string): Promise<DrupalNode | null> {
   } catch (error) {
     console.error("Error fetching article by ID:", error);
     return null;
+  }
+}
+
+export async function getCommentsForEntity(entityId: string): Promise<DrupalComment[]> {
+  debugger;
+  try {
+    const comments = await drupal.getResourceCollection<DrupalComment[]>(
+      "comment--comment",
+      {
+        params: {
+          "filter[entity_id.id]": entityId,
+          include: "uid",
+        },
+      }
+    );
+    return comments;
+  } catch (error) {
+    console.error("Error fetching comments for entity:", error);
+    return [];
   }
 }
