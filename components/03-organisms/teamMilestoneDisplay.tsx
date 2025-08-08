@@ -56,9 +56,10 @@ interface TeamMilestoneDisplayProps {
     comment_body?: { value: string };
     user_id?: { display_name: string };
   }[];
+  projectNodeId: string;
 }
 
-export default function TeamMilestoneDisplay({ executionTracks, comments }: TeamMilestoneDisplayProps) {
+export default function TeamMilestoneDisplay({ executionTracks, comments, projectNodeId }: TeamMilestoneDisplayProps) {
   if (!executionTracks || executionTracks.length === 0) {
     return <p className="text-gray-600">No execution tracks found.</p>;
   }
@@ -72,7 +73,7 @@ export default function TeamMilestoneDisplay({ executionTracks, comments }: Team
   }));
   return (
     <div className="space-y-8">
-      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} />
+      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} />
     </div>
   );
 }
@@ -81,9 +82,10 @@ interface TeamMilestoneGroupProps {
   teamName: string;
   tracks: ExecutionTrack[];
   initialComments: Comment[];
+  projectNodeId: string;
 }
 
-function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestoneGroupProps) {
+function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId }: TeamMilestoneGroupProps) {
   const milestones = tracks.flatMap((track) =>
     (track?.field_execution_plan || []).map((milestone) => ({
       id: milestone.id,
@@ -137,20 +139,21 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments }: TeamMilestone
       return;
     }
 
-    // // Assume you have current user's Drupal UID somewhere - replace with your actual logic
-    // const currentUserUid = "current-user-uuid-here"; // Replace with real UID
+    // Assume you have current user's Drupal UID somewhere - replace with your actual logic
+    const currentUserUid = "5ffc8e2d-4860-47ab-a019-bad7b5a09e6f"; // Replace with real UID
 
-    // // 1. Post comment to Drupal
-    // const commentResult = await postCommentForMilestone({
-    //   milestoneId: selectedMilestone.id,
-    //   uid: currentUserUid,
-    //   text: newComment.trim(),
-    // });
+    // 1. Post comment to Drupal
+    const commentResult = await postCommentForMilestone({
+      projectNodeId: projectNodeId,  // UUID of your project node
+      uid: currentUserUid,  // UUID of current user
+      text: newComment.trim(),
+    });
+    console.log(commentResult, 'commentResult');
 
-    // if (!commentResult.success) {
-    //   alert("Failed to post comment. Please try again.");
-    //   return;
-    // }
+    if (!commentResult.success) {
+      alert("Failed to post comment. Please try again.");
+      return;
+    }
 
     // 2. Update milestone status
     const statusResult = await updateMilestoneStatus(selectedMilestone.id, status);
