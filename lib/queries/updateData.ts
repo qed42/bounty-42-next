@@ -377,3 +377,51 @@ export async function addTeamToProject(
     message: "Claimed accepted, please wait for someone to reach out.",
   };
 }
+
+
+export async function postCommentForMilestone({
+  milestoneId,
+  uid,
+  text,
+}: {
+  milestoneId: string;
+  uid: string; // Drupal user UUID
+  text: string;
+}) {
+  try {
+    const response = await drupal.createResource("comment--comment", {
+      data: {
+        type: "comment--comment",
+        attributes: {
+          subject: `Comment on milestone ${milestoneId}`,
+          comment_type: "comment", // default
+          entity_type: "paragraph",
+          field_name: "field_comments", // must match your comment field machine name
+          comment_body: {
+            value: text,
+            format: "basic_html",
+          },
+        },
+        relationships: {
+          entity_id: {
+            data: {
+              type: "paragraph--milestone",
+              id: milestoneId,
+            },
+          },
+          uid: {
+            data: {
+              type: "user--user",
+              id: uid,
+            },
+          },
+        },
+      },
+    });
+
+    return { success: true, comment: response };
+  } catch (error) {
+    console.error("Error posting comment:", error);
+    return { success: false, error };
+  }
+}
