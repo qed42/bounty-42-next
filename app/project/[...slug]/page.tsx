@@ -13,6 +13,7 @@ import AuthGuard from "@/components/AuthGuard";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
 import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapper";
 import { getCommentsForEntity } from "@/lib/queries/getData";
+import { getSessionToken } from "@/lib/getSessionToken";
 interface ExecutionTrack {
   field_team: unknown;
 }
@@ -31,9 +32,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
   const client = await getGraphQLClient();
-  const session = (await getServerSession(authOptions)) as {
-    user?: { email?: string };
-  } | null;
+
+  const token = await getSessionToken();
 
   const currentPath = `/project/${slug}`;
   const { data, error } = await client.query(GET_PROJECT_BY_PATH, {
@@ -58,7 +58,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     ) || [];
 
   const isUserInProject = await getProjectsForUserEmail(
-    session?.user?.email || ""
+    token?.email || ""
   );
 
   const canUserBeAddedProject =
@@ -127,7 +127,13 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
               />
-              <TeamMilestoneWrapper executionTracks={response?.field_execution_tracks} comments={comments} projectNodeId={project.id} />
+              <TeamMilestoneWrapper
+                executionTracks={response?.field_execution_tracks}
+                comments={comments}
+                projectNodeId={project.id}
+                userTokenId={token?.uuid}
+              />
+
             </section>
 
             {/* Reward (Mobile View) */}

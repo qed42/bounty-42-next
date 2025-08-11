@@ -388,46 +388,42 @@ export async function postCommentForMilestone({
   text: string;
 }) {
   try {
-    const data = {
-      attributes: {
-        subject: `Comment on project ${projectNodeId}`,
-        comment_type: 'comment',
-        field_name: 'field_comments',
-        comment_body: {
-          value: text,
-          format: 'basic_html',
-        },
-        status: true,
-      },
-      relationships: {
-        entity_id: {
-          data: {
-            type: 'node--project',
-            id: projectNodeId,
+    const payload = {
+      data: {
+        type: "comment--comment",
+        attributes: {
+          subject: `Comment on project ${projectNodeId}`,
+          entity_type: "node",
+          field_name: "field_comments",
+          comment_body: {
+            value: text,
+            format: "basic_html",
           },
         },
-        uid: {
-          data: {
-            type: 'user--user',
-            id: uid,
+        relationships: {
+          entity_id: {
+            data: {
+              type: "node--project",
+              id: projectNodeId,
+            },
           },
-        },
-        comment_type: {
-          data: {
-            type: 'comment_type--comment_type',
-            id: '9aca1e6d-6c27-42ef-8d90-e95885c48324',
+          uid: {
+            data: {
+              type: "user--user",
+              id: uid,
+            },
           },
         },
       },
     };
-console.log('Drupal client:', drupal);
 
-    console.log(data, 'comment payload');
-    const createdComment = await drupal.createResource('comment--comment', data);
-
+    const createdComment = await drupal.createResource(
+      "comment--comment",
+      payload
+    );
     return { success: true, comment: createdComment };
   } catch (error) {
-    console.error('Error posting comment:', error);
+    console.error("Error posting comment:", error);
     return { success: false, error };
   }
 }
