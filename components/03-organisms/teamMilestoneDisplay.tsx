@@ -219,7 +219,6 @@ function TeamMilestoneGroup({
     });
     if (notify) {
       await sendNotificationEmail(teamMembersEmail, projectDetails);
-      console.log(`TEAM MEMBERS EMAIL`, teamMembersEmail);
     }
 
     alert(
@@ -229,8 +228,6 @@ function TeamMilestoneGroup({
     );
 
   };
-
-  console.log(`TRACKS`, mentorEmail);
 
   return (
     <div className="p-5 bg-gray-50 rounded-xl shadow">
