@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { DrupalComment } from "../../lib/type";
 
 const TeamMilestoneDisplay = dynamic(() => import("./teamMilestoneDisplay"), {
   ssr: false,
@@ -16,7 +17,6 @@ interface ExecutionTrack {
     field_milestone_details: string;
   }>;
 }
-
 interface TeamMilestoneWrapperProps {
   executionTracks: ExecutionTrack[];
   comments: DrupalComment[];
@@ -30,5 +30,18 @@ export default function TeamMilestoneWrapper({
   projectNodeId,
   userTokenId,
 }: TeamMilestoneWrapperProps) {
-  return <TeamMilestoneDisplay executionTracks={executionTracks} comments={comments} projectNodeId={projectNodeId} userTokenId={userTokenId} />;
+  const safeComments = comments.map((c) => ({
+    ...c,
+    subject: c.subject ?? "",
+    comment_body: { value: c.comment_body?.value ?? "" },
+    user_id: { display_name: c.user_id?.display_name ?? "" },
+  }));
+  return (
+    <TeamMilestoneDisplay
+      executionTracks={executionTracks}
+      comments={safeComments}
+      projectNodeId={projectNodeId}
+      userTokenId={userTokenId}
+    />
+  );
 }
