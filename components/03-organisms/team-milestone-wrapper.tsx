@@ -20,13 +20,15 @@ interface ExecutionTrack {
 interface TeamMilestoneWrapperProps {
   executionTracks: ExecutionTrack[];
   comments: DrupalComment[];
-  projectNodeId: string;  // Add this
+  projectNodeId: string;
+  userTokenId: string;
 }
 
 export default function TeamMilestoneWrapper({
   executionTracks,
   comments,
   projectNodeId,
+  userTokenId,
 }: TeamMilestoneWrapperProps) {
-  return <TeamMilestoneDisplay executionTracks={executionTracks} comments={comments} projectNodeId={projectNodeId} />;
+  return <TeamMilestoneDisplay executionTracks={executionTracks} comments={comments} projectNodeId={projectNodeId} userTokenId={userTokenId} />;
 }

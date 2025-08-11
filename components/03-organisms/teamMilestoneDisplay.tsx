@@ -57,9 +57,10 @@ interface TeamMilestoneDisplayProps {
     user_id?: { display_name: string };
   }[];
   projectNodeId: string;
+  userTokenId: string;
 }
 
-export default function TeamMilestoneDisplay({ executionTracks, comments, projectNodeId }: TeamMilestoneDisplayProps) {
+export default function TeamMilestoneDisplay({ executionTracks, comments, projectNodeId, userTokenId }: TeamMilestoneDisplayProps) {
   if (!executionTracks || executionTracks.length === 0) {
     return <p className="text-gray-600">No execution tracks found.</p>;
   }
@@ -73,7 +74,7 @@ export default function TeamMilestoneDisplay({ executionTracks, comments, projec
   }));
   return (
     <div className="space-y-8">
-      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} />
+      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} />
     </div>
   );
 }
@@ -83,9 +84,10 @@ interface TeamMilestoneGroupProps {
   tracks: ExecutionTrack[];
   initialComments: Comment[];
   projectNodeId: string;
+  userTokenId: string;
 }
 
-function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId }: TeamMilestoneGroupProps) {
+function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, userTokenId }: TeamMilestoneGroupProps) {
   const milestones = tracks.flatMap((track) =>
     (track?.field_execution_plan || []).map((milestone) => ({
       id: milestone.id,
@@ -140,7 +142,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId }
     }
 
     // Assume you have current user's Drupal UID somewhere - replace with your actual logic
-    const currentUserUid = "5ffc8e2d-4860-47ab-a019-bad7b5a09e6f"; // Replace with real UID
+    const currentUserUid = userTokenId; // Replace with real UID
 
     // 1. Post comment to Drupal
     const commentResult = await postCommentForMilestone({
@@ -148,7 +150,6 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId }
       uid: currentUserUid,  // UUID of current user
       text: newComment.trim(),
     });
-    console.log(commentResult, 'commentResult');
 
     if (!commentResult.success) {
       alert("Failed to post comment. Please try again.");
