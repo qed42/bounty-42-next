@@ -55,8 +55,6 @@ export async function sendEmail({
     };
   }
 
-  console.log(`TO`, to)
-
   const params = {
     Source: fromEmail,
     Destination: {

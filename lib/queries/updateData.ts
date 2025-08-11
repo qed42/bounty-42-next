@@ -494,7 +494,6 @@ export const sendNotificationEmail = async (
     });
 
     const data = await response.json();
-    console.log(`DATA FROM EMAIL`, data);
 
     if (response.ok) {
       return {
