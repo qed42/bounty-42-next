@@ -5,10 +5,6 @@ import { postCommentForMilestone } from "@/lib/queries/updateData"
 import { updateMilestoneStatus } from "@/lib/queries/updateData"
 import { Button } from "@/components/ui/button";
 
-function stripHtml(html: string) {
-  if (!html) return "";
-  return html.replace(/<[^>]*>/g, "").trim();
-}
 function decodeAndStripHtml(html: string) {
   if (!html) return "";
 
@@ -32,6 +28,7 @@ interface Milestone {
   id: string;
   field_milestone_name: string;
   field_milestone_details: string;
+  field_milestone_status?: string;
 }
 
 interface ExecutionTrack {
@@ -68,10 +65,11 @@ export default function TeamMilestoneDisplay({ executionTracks, comments, projec
   const firstTrack = executionTracks[0];
   const teamName = firstTrack?.field_team?.name || "Unknown Team";
 
-  const formattedComments: Comment[] = comments.map((c: any) => ({
-    name: c.uid?.display_name || "Anonymous",
+  const formattedComments: Comment[] = comments.map((c) => ({
+    name: c.user_id?.display_name || "Anonymous",
     text: decodeAndStripHtml(c.comment_body?.value || ""),
   }));
+
   return (
     <div className="space-y-8">
       <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} />
@@ -93,8 +91,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
       id: milestone.id,
       name: milestone.field_milestone_name,
       details: milestone.field_milestone_details,
-      // Try to get milestone-specific status instead of track-level
-      status: (milestone as any).field_milestone_status || track.field_milestone_status || "Not started",
+      status: milestone.field_milestone_status || track.field_milestone_status || "Not started",
     }))
   ).filter((m) => m.id);
 

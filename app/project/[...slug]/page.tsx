@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { getServerSession } from "next-auth";
 import { Clock, Tag } from "lucide-react";
-import authOptions from "@/lib/authOptions";
 import {
   GET_PROJECT_BY_PATH,
   getProjectsForUserEmail,
@@ -131,7 +129,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 executionTracks={response?.field_execution_tracks}
                 comments={comments}
                 projectNodeId={project.id}
-                userTokenId={token?.uuid}
+                userTokenId={typeof token?.uuid === "string" ? token.uuid : ""}
               />
 
             </section>

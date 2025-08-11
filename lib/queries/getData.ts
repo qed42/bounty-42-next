@@ -1,6 +1,7 @@
-import { DrupalNode, DrupalTaxonomyTerm, DrupalComment } from "next-drupal";
+import { DrupalNode, DrupalTaxonomyTerm } from "next-drupal";
 import { gql } from "urql";
 import { drupal } from "../drupal";
+import { DrupalComment } from "../type";
 
 export const GET_PROJECTS = gql`
   query GetProjects($first: Int, $after: Cursor) {
