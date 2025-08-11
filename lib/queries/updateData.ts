@@ -149,8 +149,8 @@ export async function checkIfMemberExists(
   email: string
 ) {
   for (const team of projectTeams) {
-    const match = team.field_team_members.find(
-      (member) => member.mail.toLowerCase() === email.toLowerCase()
+    const match = team?.field_team_members?.find(
+      (member) => member?.mail?.toLowerCase() === email.toLowerCase()
     );
 
     if (match) {
@@ -428,21 +428,87 @@ export async function postCommentForMilestone({
   }
 }
 
-export async function updateMilestoneStatus(milestoneId: string, status: string) {
-  const transformedStatus = status.replace(/[\s-]+/g, '_').toLowerCase();
+export async function updateMilestoneStatus(
+  milestoneId: string,
+  status: string
+) {
+  const transformedStatus = status.replace(/[\s-]+/g, "_").toLowerCase();
   try {
-    const response = await drupal.updateResource("paragraph--milestone", milestoneId, {
-      data: {
-        type: "paragraph--milestone",
-        id: milestoneId,
-        attributes: {
-          field_milestone_status: transformedStatus,
+    const response = await drupal.updateResource(
+      "paragraph--milestone",
+      milestoneId,
+      {
+        data: {
+          type: "paragraph--milestone",
+          id: milestoneId,
+          attributes: {
+            field_milestone_status: transformedStatus,
+          },
         },
-      },
-    });
+      }
+    );
     return { success: true, data: response };
   } catch (error) {
     console.error("Failed to update milestone status:", error);
     return { success: false, error };
   }
 }
+
+export const sendNotificationEmail = async (
+  emails: string[],
+  projectDetails: { name: string; path: string }
+) => {
+  const { name, path } = projectDetails;
+
+  const subject = `Recent Activity in "${name}"`;
+
+  const htmlContent = `
+    <p>Hi, there’s been some recent activity in the project <strong>${name}</strong>.</p>
+    <p>You can check it out here: <a href="${path}">${path}</a></p>
+    <br/>
+    <p style="color: #555;">— Bounty Portal Team</p>
+  `;
+
+  const textContent = `
+    Hi there,
+
+    There’s been some recent activity in the project "${name}".
+
+    Check it out here: ${path}
+
+    — Bounty Portal Team
+      `;
+
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: emails,
+        subject,
+        htmlContent,
+        textContent,
+      }),
+    });
+
+    const data = await response.json();
+    console.log(`DATA FROM EMAIL`, data);
+
+    if (response.ok) {
+      return {
+        success: true,
+        data,
+      };
+    } else {
+      return {
+        success: false,
+        error: data.error || "Failed to send email",
+      };
+    }
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    return { success: false, error };
+  }
+};

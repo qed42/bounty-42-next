@@ -54,6 +54,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     response?.field_execution_tracks?.map(
       (track: ExecutionTrack) => track.field_team
     ) || [];
+  
+  const projectDetails = {
+    name: project.title,
+    path:  `${process.env.NEXTAUTH_URL}${response?.path?.alias ?? ""}`
+  }
 
   const isUserInProject = await getProjectsForUserEmail(
     token?.email || ""
@@ -128,8 +133,10 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 executionTracks={response?.field_execution_tracks}
                 comments={comments}
                 projectNodeId={project.id}
+                projectMentor={response?.field_project_mentor}
+                projectDetails={projectDetails}
                 userTokenId={typeof token?.uuid === "string" ? token.uuid : ""}
-                currentUserEmail={token?.email || token?.display_name || "Anonymous"}
+                currentUserEmail={token?.email || ""}
               />
 
             </section>
