@@ -71,10 +71,10 @@ export const GET_PROJECT_BY_PATH = gql`
               }
             }
             teams {
-                  ... on TermProjectTeam {
-                    id
-                    name
-                    teamMembers {
+              ... on TermProjectTeam {
+                id
+                name
+                teamMembers {
                   id
                   name
                   mail
@@ -100,8 +100,9 @@ export async function getProjectWithTeamMembersById(
       params: {
         include: [
           "field_teams.field_team_members",
-          "field_execution_tracks.field_team",
+          "field_execution_tracks.field_team.field_team_members",
           "field_execution_tracks.field_execution_plan",
+          "field_project_mentor"
         ].join(","),
       },
     });
@@ -170,7 +171,9 @@ export async function getProjectById(id: string): Promise<DrupalNode | null> {
   }
 }
 
-export async function getCommentsForEntity(entityId: string): Promise<DrupalComment[]> {
+export async function getCommentsForEntity(
+  entityId: string
+): Promise<DrupalComment[]> {
   try {
     const comments = await drupal.getResourceCollection<DrupalComment[]>(
       "comment--comment",
@@ -183,6 +186,7 @@ export async function getCommentsForEntity(entityId: string): Promise<DrupalComm
     );
 
     // Map the included user data into display names
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return comments.map((comment: any) => {
       let authorEmail = "Anonymous";
       if (comment.uid?.mail) {

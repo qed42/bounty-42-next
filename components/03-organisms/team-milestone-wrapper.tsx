@@ -23,11 +23,16 @@ interface TeamMilestoneWrapperProps {
   projectNodeId: string;
   userTokenId: string;
   currentUserEmail: string;
+  projectMentor?: { mail: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  projectDetails?: any;
 }
 
 export default function TeamMilestoneWrapper({
   executionTracks,
   comments,
+  projectMentor,
+  projectDetails,
   projectNodeId,
   userTokenId,
   currentUserEmail,
@@ -45,6 +50,8 @@ export default function TeamMilestoneWrapper({
       projectNodeId={projectNodeId}
       userTokenId={userTokenId}
       currentUserEmail={currentUserEmail}
+      mentorEmail={projectMentor?.mail || ""}
+      projectDetails={projectDetails}
     />
   );
 }

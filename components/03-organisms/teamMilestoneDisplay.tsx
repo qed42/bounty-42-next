@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { postCommentForMilestone } from "@/lib/queries/updateData"
-import { updateMilestoneStatus } from "@/lib/queries/updateData"
+import {
+  postCommentForMilestone,
+  sendNotificationEmail,
+} from "@/lib/queries/updateData";
+import { updateMilestoneStatus } from "@/lib/queries/updateData";
 import { Button } from "@/components/ui/button";
 
 function decodeAndStripHtml(html: string) {
@@ -34,6 +37,9 @@ interface Milestone {
 interface ExecutionTrack {
   field_team: {
     name: string;
+    field_team_members?: Array<{
+      mail: string;
+    }>;
   };
   field_execution_plan: Milestone[];
   field_milestone_status?: string;
@@ -56,9 +62,20 @@ interface TeamMilestoneDisplayProps {
   projectNodeId: string;
   userTokenId: string;
   currentUserEmail: string;
+  mentorEmail: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  projectDetails?: any;
 }
 
-export default function TeamMilestoneDisplay({ executionTracks, comments, projectNodeId, userTokenId, currentUserEmail }: TeamMilestoneDisplayProps) {
+export default function TeamMilestoneDisplay({
+  executionTracks,
+  comments,
+  projectNodeId,
+  userTokenId,
+  currentUserEmail,
+  mentorEmail,
+  projectDetails
+}: TeamMilestoneDisplayProps) {
   if (!executionTracks || executionTracks.length === 0) {
     return <p className="text-gray-600">No execution tracks found.</p>;
   }
@@ -73,7 +90,8 @@ export default function TeamMilestoneDisplay({ executionTracks, comments, projec
 
   return (
     <div className="space-y-8">
-      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} currentUserEmail={currentUserEmail} />
+      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} currentUserEmail={currentUserEmail} mentorEmail={mentorEmail}
+        projectDetails={projectDetails} />
     </div>
   );
 }
@@ -84,19 +102,35 @@ interface TeamMilestoneGroupProps {
   initialComments: Comment[];
   projectNodeId: string;
   userTokenId: string;
+  mentorEmail: string;
   currentUserEmail: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  projectDetails?: any;
 }
 
-function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, userTokenId, currentUserEmail }: TeamMilestoneGroupProps) {
-  const milestones = tracks.flatMap((track) =>
-    (track?.field_execution_plan || []).map((milestone) => ({
-      id: milestone.id,
-      name: milestone.field_milestone_name,
-      details: milestone.field_milestone_details,
-      status: milestone.field_milestone_status || track.field_milestone_status || "Not started",
-    }))
-  ).filter((m) => m.id);
-
+function TeamMilestoneGroup({
+  teamName,
+  tracks,
+  initialComments,
+  projectNodeId,
+  userTokenId,
+  currentUserEmail,
+  mentorEmail,
+  projectDetails
+}: TeamMilestoneGroupProps) {
+  const milestones = tracks
+    .flatMap((track) =>
+      (track?.field_execution_plan || []).map((milestone) => ({
+        id: milestone.id,
+        name: milestone.field_milestone_name,
+        details: milestone.field_milestone_details,
+        status:
+          milestone.field_milestone_status ||
+          track.field_milestone_status ||
+          "Not started",
+      }))
+    )
+    .filter((m) => m.id);
 
   const options = ["Not started", "In-progress", "Completed"];
 
@@ -111,10 +145,10 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
   const [selectedId, setSelectedId] = useState<string>(milestones[0]?.id || "");
 
   const getNormalizedStatus = (milestoneId: string) => {
-    const milestone = milestones.find(m => m.id === milestoneId);
+    const milestone = milestones.find((m) => m.id === milestoneId);
     if (!milestone) return options[0];
     return normalizeStatus(milestone.status);
-  }
+  };
 
   const [status, setStatus] = useState(() => getNormalizedStatus(selectedId));
 
@@ -127,18 +161,20 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
   const [newComment, setNewComment] = useState("");
   const [notify, setNotify] = useState(false);
 
-  const selectedMilestone = milestones.find((m: ProcessedMilestone) => m.id === selectedId);
+  const selectedMilestone = milestones.find(
+    (m: ProcessedMilestone) => m.id === selectedId
+  );
 
   const handleSubmit = async () => {
     if (!newComment.trim()) {
-    alert("Please enter a comment before submitting.");
-    return;
-  }
+      alert("Please enter a comment before submitting.");
+      return;
+    }
 
-  if (!selectedMilestone) {
-    alert("Please select a milestone.");
-    return;
-  }
+    if (!selectedMilestone) {
+      alert("Please select a milestone.");
+      return;
+    }
 
     // Assume you have current user's Drupal UID somewhere - replace with your actual logic
     const currentUserUid = userTokenId; // Replace with real UID
@@ -157,7 +193,10 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
     // 2. Update milestone status
     const currentStatus = getNormalizedStatus(selectedMilestone.id);
     if (currentStatus !== status) {
-      const statusResult = await updateMilestoneStatus(selectedMilestone.id, status);
+      const statusResult = await updateMilestoneStatus(
+        selectedMilestone.id,
+        status
+      );
       if (!statusResult.success) {
         alert("Failed to update milestone status. Please try again.");
         return;
@@ -171,6 +210,18 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
     ]);
     setNewComment("");
 
+    // 4. Notify team members via email
+    const teamMembersEmail = [mentorEmail];
+    tracks?.map((track) => {
+      track.field_team?.field_team_members?.forEach((member) => {
+        teamMembersEmail.push(member.mail);
+      });
+    });
+    if (notify) {
+      await sendNotificationEmail(teamMembersEmail, projectDetails);
+      console.log(`TEAM MEMBERS EMAIL`, teamMembersEmail);
+    }
+
     alert(
       currentStatus !== status
         ? "Submitted! Milestone status and comment updated."
@@ -179,13 +230,18 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
 
   };
 
+  console.log(`TRACKS`, mentorEmail);
+
   return (
     <div className="p-5 bg-gray-50 rounded-xl shadow">
       <h3 className="text-xl font-bold mb-3">{teamName}</h3>
 
       {/* Milestone Select */}
       <div className="mb-6">
-        <label htmlFor="milestone-select" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="milestone-select"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Select a Milestone
         </label>
         <select
@@ -205,7 +261,10 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
       {/* Milestone Detail */}
       {selectedMilestone && (
         <div className="text-gray-800 mb-4">
-          <label htmlFor="milestone-detail" className="block text-sm font-semibold text-gray-700 mb-1">
+          <label
+            htmlFor="milestone-detail"
+            className="block text-sm font-semibold text-gray-700 mb-1"
+          >
             Milestone Detail
           </label>
           <p id="milestone-detail">{selectedMilestone.details}</p>
@@ -214,12 +273,18 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
 
       {/* Status */}
       <div className="mb-4">
-        <label htmlFor="milestone-status" className="block text-sm font-semibold text-gray-700 mb-1">
+        <label
+          htmlFor="milestone-status"
+          className="block text-sm font-semibold text-gray-700 mb-1"
+        >
           Status
         </label>
         <div className="flex gap-4" id="milestone-status">
           {options.map((s) => (
-            <label key={s} className="inline-flex items-center gap-1 text-sm text-gray-800">
+            <label
+              key={s}
+              className="inline-flex items-center gap-1 text-sm text-gray-800"
+            >
               <input
                 type="radio"
                 name="status"
@@ -236,7 +301,9 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
 
       {/* New Comment */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Comment
+        </label>
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -264,8 +331,13 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
       <div className="mb-4">
         <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
           {comments.map((comment, index) => (
-            <div key={index} className="pl-3 border-l-2 border-primary bg-white py-1">
-              <p className="text-sm font-semibold text-gray-900 mb-1">{comment.name}</p>
+            <div
+              key={index}
+              className="pl-3 border-l-2 border-primary bg-white py-1"
+            >
+              <p className="text-sm font-semibold text-gray-900 mb-1">
+                {comment.name}
+              </p>
               <pre className="whitespace-pre-wrap break-words text-sm text-gray-800">
                 {comment.text}
               </pre>
@@ -275,7 +347,9 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
       </div>
 
       {/* Submit */}
-      <Button onClick={handleSubmit} className="cursor-pointer">Submit</Button>
+      <Button onClick={handleSubmit} className="cursor-pointer">
+        Submit
+      </Button>
     </div>
   );
 }
