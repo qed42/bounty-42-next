@@ -22,6 +22,7 @@ interface TeamMilestoneWrapperProps {
   comments: DrupalComment[];
   projectNodeId: string;
   userTokenId: string;
+  currentUserEmail: string;
 }
 
 export default function TeamMilestoneWrapper({
@@ -29,6 +30,7 @@ export default function TeamMilestoneWrapper({
   comments,
   projectNodeId,
   userTokenId,
+  currentUserEmail,
 }: TeamMilestoneWrapperProps) {
   const safeComments = comments.map((c) => ({
     ...c,
@@ -42,6 +44,7 @@ export default function TeamMilestoneWrapper({
       comments={safeComments}
       projectNodeId={projectNodeId}
       userTokenId={userTokenId}
+      currentUserEmail={currentUserEmail}
     />
   );
 }

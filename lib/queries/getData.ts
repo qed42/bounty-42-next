@@ -181,9 +181,24 @@ export async function getCommentsForEntity(entityId: string): Promise<DrupalComm
         },
       }
     );
-    return comments;
+
+    // Map the included user data into display names
+    return comments.map((comment: any) => {
+      let authorEmail = "Anonymous";
+      if (comment.uid?.mail) {
+        authorEmail = comment.uid.mail; // Drupal username
+      } else if (comment.uid?.mail) {
+        authorEmail = comment.uid.mail; // If your Drupal has display_name field
+      }
+
+      return {
+        ...comment,
+        user_id: { display_name: authorEmail },
+      };
+    });
   } catch (error) {
     console.error("Error fetching comments for entity:", error);
     return [];
   }
 }
+
