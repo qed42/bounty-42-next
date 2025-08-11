@@ -58,7 +58,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const isUserInProject = await getProjectsForUserEmail(
     token?.email || ""
   );
-
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
 
@@ -130,6 +129,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 comments={comments}
                 projectNodeId={project.id}
                 userTokenId={typeof token?.uuid === "string" ? token.uuid : ""}
+                currentUserEmail={token?.email || token?.display_name || "Anonymous"}
               />
 
             </section>

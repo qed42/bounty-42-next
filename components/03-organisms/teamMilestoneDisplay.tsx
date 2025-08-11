@@ -55,9 +55,10 @@ interface TeamMilestoneDisplayProps {
   }[];
   projectNodeId: string;
   userTokenId: string;
+  currentUserEmail: string;
 }
 
-export default function TeamMilestoneDisplay({ executionTracks, comments, projectNodeId, userTokenId }: TeamMilestoneDisplayProps) {
+export default function TeamMilestoneDisplay({ executionTracks, comments, projectNodeId, userTokenId, currentUserEmail }: TeamMilestoneDisplayProps) {
   if (!executionTracks || executionTracks.length === 0) {
     return <p className="text-gray-600">No execution tracks found.</p>;
   }
@@ -72,7 +73,7 @@ export default function TeamMilestoneDisplay({ executionTracks, comments, projec
 
   return (
     <div className="space-y-8">
-      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} />
+      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} currentUserEmail={currentUserEmail} />
     </div>
   );
 }
@@ -83,9 +84,10 @@ interface TeamMilestoneGroupProps {
   initialComments: Comment[];
   projectNodeId: string;
   userTokenId: string;
+  currentUserEmail: string;
 }
 
-function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, userTokenId }: TeamMilestoneGroupProps) {
+function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, userTokenId, currentUserEmail }: TeamMilestoneGroupProps) {
   const milestones = tracks.flatMap((track) =>
     (track?.field_execution_plan || []).map((milestone) => ({
       id: milestone.id,
@@ -147,7 +149,6 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
       uid: currentUserUid,
       text: newComment.trim(),
     });
-
     if (!commentResult.success) {
       alert("Failed to post comment. Please try again.");
       return;
@@ -166,7 +167,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
     // 3. Update local comments list state
     setComments((prev) => [
       ...prev,
-      { name: "Current User", text: newComment.trim() },
+      { name: currentUserEmail, text: newComment.trim() },
     ]);
     setNewComment("");
 
@@ -175,6 +176,7 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
         ? "Submitted! Milestone status and comment updated."
         : "Submitted! Comment posted (status unchanged)."
     );
+
   };
 
   return (
