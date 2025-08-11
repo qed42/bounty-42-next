@@ -132,22 +132,22 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
 
   const handleSubmit = async () => {
     if (!newComment.trim()) {
-      alert("Please enter a comment before submitting.");
-      return;
-    }
+    alert("Please enter a comment before submitting.");
+    return;
+  }
 
-    if (!selectedMilestone) {
-      alert("Please select a milestone.");
-      return;
-    }
+  if (!selectedMilestone) {
+    alert("Please select a milestone.");
+    return;
+  }
 
     // Assume you have current user's Drupal UID somewhere - replace with your actual logic
     const currentUserUid = userTokenId; // Replace with real UID
 
     // 1. Post comment to Drupal
     const commentResult = await postCommentForMilestone({
-      projectNodeId: projectNodeId,  // UUID of your project node
-      uid: currentUserUid,  // UUID of current user
+      projectNodeId,
+      uid: currentUserUid,
       text: newComment.trim(),
     });
 
@@ -157,23 +157,27 @@ function TeamMilestoneGroup({ teamName, tracks, initialComments, projectNodeId, 
     }
 
     // 2. Update milestone status
-    const statusResult = await updateMilestoneStatus(selectedMilestone.id, status);
-
-    if (!statusResult.success) {
-      alert("Failed to update milestone status. Please try again.");
-      return;
+    const currentStatus = getNormalizedStatus(selectedMilestone.id);
+    if (currentStatus !== status) {
+      const statusResult = await updateMilestoneStatus(selectedMilestone.id, status);
+      if (!statusResult.success) {
+        alert("Failed to update milestone status. Please try again.");
+        return;
+      }
     }
 
     // 3. Update local comments list state
-    const newEntry: Comment = {
-      name: "Current User", // Or get real user name
-      text: newComment.trim(),
-    };
-    const updatedComments = [...comments, newEntry];
-    setComments(updatedComments);
+    setComments((prev) => [
+      ...prev,
+      { name: "Current User", text: newComment.trim() },
+    ]);
     setNewComment("");
 
-    alert("Submitted! Milestone status and comment updated.");
+    alert(
+      currentStatus !== status
+        ? "Submitted! Milestone status and comment updated."
+        : "Submitted! Comment posted (status unchanged)."
+    );
   };
 
   return (
