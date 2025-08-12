@@ -102,7 +102,7 @@ export async function getProjectWithTeamMembersById(
           "field_teams.field_team_members",
           "field_execution_tracks.field_team.field_team_members",
           "field_execution_tracks.field_execution_plan",
-          "field_project_mentor"
+          "field_project_mentor",
         ].join(","),
       },
     });
@@ -139,14 +139,8 @@ export async function getProjectsForUserEmail(email: string): Promise<boolean> {
   if (teamIds.length === 0) return false;
 
   const params: Record<string, string> = {
-    "filter[field_teams.id][operator]": "IN",
-    "fields[node--project]": "id,title,field_teams",
-    include: "field_teams",
+    include: "field_execution_tracks.field_team",
   };
-
-  teamIds.forEach((id, index) => {
-    params[`filter[field_teams.id][value][${index}]`] = id;
-  });
 
   try {
     const projects = await drupal.getResourceCollection<DrupalNode[]>(
@@ -154,7 +148,14 @@ export async function getProjectsForUserEmail(email: string): Promise<boolean> {
       { params }
     );
 
-    return projects.length > 0;
+    const projectTeamIds = projects.filter((item) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      item.field_execution_tracks?.some((track: any) =>
+        teamIds.includes(track.field_team.id)
+      )
+    );
+
+    return projectTeamIds.length > 0;
   } catch (error) {
     console.error("Error fetching projects by email:", error);
     return false;
@@ -181,7 +182,7 @@ export async function getCommentsForEntity(
         params: {
           "filter[entity_id.id]": entityId,
           include: "uid",
-          "sort": "-created",
+          sort: "-created",
         },
       }
     );
@@ -206,4 +207,3 @@ export async function getCommentsForEntity(
     return [];
   }
 }
-
