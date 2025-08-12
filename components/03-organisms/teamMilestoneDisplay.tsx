@@ -5,8 +5,9 @@ import {
   postCommentForMilestone,
   sendNotificationEmail,
 } from "@/lib/queries/updateData";
-import { updateMilestoneStatus } from "@/lib/queries/updateData";
+import { updateMilestoneStatus, deleteComment } from "@/lib/queries/updateData";
 import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 function decodeAndStripHtml(html: string) {
   if (!html) return "";
@@ -23,6 +24,7 @@ function decodeAndStripHtml(html: string) {
 }
 
 interface Comment {
+  id: string;
   name: string;
   text: string;
 }
@@ -84,6 +86,7 @@ export default function TeamMilestoneDisplay({
   const teamName = firstTrack?.field_team?.name || "Unknown Team";
 
   const formattedComments: Comment[] = comments.map((c) => ({
+    id: c.id,
     name: c.user_id?.display_name || "Anonymous",
     text: decodeAndStripHtml(c.comment_body?.value || ""),
   }));
@@ -231,6 +234,17 @@ function TeamMilestoneGroup({
 
   };
 
+  const handleDelete = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    const result = await deleteComment(commentId);
+    if (result.success) {
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } else {
+      alert("Failed to delete comment.");
+    }
+  };
+
+
   return (
     <div className="p-5 bg-gray-50 rounded-xl shadow">
       <h3 className="text-xl font-bold mb-3">{teamName}</h3>
@@ -329,17 +343,28 @@ function TeamMilestoneGroup({
       {/* Comments List */}
       <div className="mb-4">
         <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-          {comments.map((comment, index) => (
+          {comments.map((comment) => (
             <div
-              key={index}
-              className="pl-3 border-l-2 border-primary bg-white py-1"
+              key={comment.id}
+              className="flex justify-between items-start p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
-              <p className="text-sm font-semibold text-gray-900 mb-1">
-                {comment.name}
-              </p>
-              <pre className="whitespace-pre-wrap break-words text-sm text-gray-800">
-                {comment.text}
-              </pre>
+              {/* Comment text */}
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">{comment.name}</p>
+                <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">
+                  {comment.text}
+                </p>
+              </div>
+
+              {/* Delete button (only for current user) */}
+              {comment.name === currentUserEmail && (
+                <button
+                  onClick={() => handleDelete(comment.id)}
+                  className="ml-3 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
+          title="Delete comment">
+                  <Trash2 size={16} strokeWidth={2} />
+                </button>
+              )}
             </div>
           ))}
         </div>
