@@ -204,10 +204,12 @@ function TeamMilestoneGroup({
     }
 
     // 3. Update local comments list state
-    setComments((prev) => [
-      ...prev,
-      { name: currentUserEmail, text: newComment.trim() },
-    ]);
+    const formattedNewComment: Comment = {
+      name: currentUserEmail,
+      text: decodeAndStripHtml(newComment.trim()),
+    };
+    setComments((prev) => [formattedNewComment, ...prev]);
+
     setNewComment("");
 
     // 4. Notify team members via email
