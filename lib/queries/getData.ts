@@ -181,6 +181,7 @@ export async function getCommentsForEntity(
         params: {
           "filter[entity_id.id]": entityId,
           include: "uid",
+          "sort": "-created",
         },
       }
     );
