@@ -208,6 +208,7 @@ function TeamMilestoneGroup({
 
     // 3. Update local comments list state
     const formattedNewComment: Comment = {
+      id: Date.now().toString(),
       name: currentUserEmail,
       text: decodeAndStripHtml(newComment.trim()),
     };

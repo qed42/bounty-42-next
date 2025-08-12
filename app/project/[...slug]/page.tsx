@@ -83,7 +83,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     selectedProjectTeamMembers.length > 0
       ? canUserAccessProjectUpdates(
           selectedProjectTeamMembers,
-          response?.field_project_mentor.mail,
+          response?.field_project_mentor?.mail,
           token?.email
         )
       : false;
