@@ -213,7 +213,7 @@ function TeamMilestoneGroup({
     setNewComment("");
 
     // 4. Notify team members via email
-    const teamMembersEmail = [mentorEmail];
+    const teamMembersEmail = mentorEmail.length > 0 ? [mentorEmail] : [];
     tracks?.map((track) => {
       track.field_team?.field_team_members?.forEach((member) => {
         teamMembersEmail.push(member.mail);
