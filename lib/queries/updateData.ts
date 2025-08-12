@@ -511,3 +511,13 @@ export const sendNotificationEmail = async (
     return { success: false, error };
   }
 };
+
+export async function deleteComment(commentId: string) {
+  try {
+    await drupal.deleteResource("comment--comment", commentId);
+    return { success: true };
+  } catch (err) {
+    console.error("Error deleting comment:", err);
+    return { success: false };
+  }
+}
