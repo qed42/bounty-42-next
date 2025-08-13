@@ -38,6 +38,7 @@ export default async function ProjectListingPage() {
     image: node.defaultImage?.url ?? "/image-placeholder.webp",
     link: node.path,
     category: node.category?.name ?? "Uncategorized",
+    weight: node.category?.weight ?? 0, // Ensure weight is always defined
   }));
 
   return (

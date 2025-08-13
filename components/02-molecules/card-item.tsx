@@ -12,6 +12,7 @@ export function CardItem({
   index,
   description,
   category,
+  weight,
   image,
   link,
 }: CardItemProps) {
@@ -28,13 +29,15 @@ export function CardItem({
         className="relative flex flex-col h-full text-primary transition-all duration-300 hover:shadow-xl group cursor-pointer pt-0"
         tabIndex={0}
         role="link"
+        key={ index }
       >
         {/* Card Image */}
         <div className="relative w-full h-56 overflow-hidden rounded-t-lg">
           <Image
             src={image || "/image-placeholder.webp"}
             alt={title}
-            fill
+            width={360}
+            height={230}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className='absolute inset-0 bg-black/20 pointer-events-none'></div>
@@ -46,7 +49,7 @@ export function CardItem({
 
           {/* Category */}
           <div
-            className={`project-category w-max absolute top-4 right-4 text-xs project-category--${index}`}
+            className={`project-category w-max absolute top-4 right-4 text-xs project-category--${weight}`}
           >
             {category}
           </div>
