@@ -524,3 +524,26 @@ export async function deleteComment(commentId: string) {
     return { success: false };
   }
 }
+
+export async function updateComment(commentId: string, text: string) {
+  try {
+    const payload = {
+      data: {
+        type: "comment--comment",
+        id: commentId,
+        attributes: {
+          comment_body: {
+            value: text,
+            format: "basic_html",
+          },
+        },
+      },
+    };
+
+    await drupal.updateResource("comment--comment", commentId, payload);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    return { success: false };
+  }
+}
