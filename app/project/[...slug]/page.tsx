@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { getServerSession } from "next-auth";
 import { Clock, Tag } from "lucide-react";
-import authOptions from "@/lib/authOptions";
 import {
   GET_PROJECT_BY_PATH,
   getProjectsForUserEmail,
@@ -11,7 +9,16 @@ import {
 import { getGraphQLClient } from "@/utils/getGraphQLClient";
 import AuthGuard from "@/components/AuthGuard";
 import TeamModalForm from "@/components/03-organisms/team-modal-form";
-
+import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapper";
+import { getCommentsForEntity } from "@/lib/queries/getData";
+import { getSessionToken } from "@/lib/getSessionToken";
+import { canUserAccessProjectUpdates } from "@/lib/utils";
+interface ExecutionTrack {
+  field_team: {
+    field_team_members: Array<{ mail: string }>;
+  };
+  field_selected: boolean;
+}
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
 }
@@ -26,9 +33,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
   const client = await getGraphQLClient();
-  const session = (await getServerSession(authOptions)) as {
-    user?: { email?: string };
-  } | null;
+
+  const token = await getSessionToken();
 
   const currentPath = `/project/${slug}`;
   const { data, error } = await client.query(GET_PROJECT_BY_PATH, {
@@ -45,14 +51,42 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   const response = await getProjectWithTeamMembersById(project.id);
-  const projectTeams = response?.field_teams ?? [];
+  const comments = await getCommentsForEntity(project.id);
+  // const projectTeams = response?.field_teams ?? [];
+  const projectTeams =
+    response?.field_execution_tracks?.map(
+      (track: ExecutionTrack) => track.field_team
+    ) || [];
 
-  const isUserInProject = await getProjectsForUserEmail(
-    session?.user?.email || ""
+  // Selected Track
+  const [selectedProjectTrack] = response?.field_execution_tracks?.filter(
+    (track: ExecutionTrack) => track.field_selected
   );
+  // Selected Project Team Members
+  const selectedProjectTeamMembers =
+    selectedProjectTrack != null
+      ? selectedProjectTrack?.field_team?.field_team_members?.map(
+          (team: { mail: string }) => team.mail
+        )
+      : [];
 
+  const projectDetails = {
+    name: project.title,
+    path: `${process.env.NEXTAUTH_URL}${response?.path?.alias ?? ""}`,
+  };
+
+  const isUserInProject = await getProjectsForUserEmail(token?.email || "");
   const canUserBeAddedProject =
     project.teams == null || project.teams.length < 3;
+
+  const canUserAccessProjectUpdate =
+    selectedProjectTeamMembers.length > 0
+      ? canUserAccessProjectUpdates(
+          selectedProjectTeamMembers,
+          response?.field_project_mentor?.mail,
+          token?.email
+        )
+      : false;
 
   return (
     <AuthGuard>
@@ -75,23 +109,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
                     {/* Category */}
-                    <div
-                      className={`project-category w-max ${
-                        project.category.name
-                          .toLowerCase()
-                          .replace(/\s+/g, "") === "pool1"
-                          ? "project-category--1"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool2"
-                          ? "project-category--2"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool3"
-                          ? "project-category--3"
-                          : "text-black"
-                      }`}
-                    >
+                    <div className={`w-max text-black`}>
                       {project.category.name}
                     </div>
                   </div>
@@ -99,24 +117,38 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Project Image */}
-            <div className="relative w-full h-96 rounded-2xl overflow-hidden shadow-xl">
-              <Image
-                src={project.defaultImage?.url || "/image-placeholder.webp"}
-                alt="Project preview"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 75vw"
-                priority
-              />
-            </div>
-
             {/* Description */}
             <section className="p-5 space-y-6 bg-white rounded-2xl shadow-xl">
+              {/* Project Image */}
+              <div className="relative w-full h-96 overflow-hidden shadow-xl">
+                <Image
+                  src={project.defaultImage?.url || "/image-placeholder.webp"}
+                  alt="Project preview"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 75vw"
+                  priority
+                />
+              </div>
+
               <div
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: project.body?.value || "" }}
               />
+
+              {canUserAccessProjectUpdate && (
+                <TeamMilestoneWrapper
+                  executionTracks={response?.field_execution_tracks}
+                  comments={comments}
+                  projectNodeId={project.id}
+                  projectMentor={response?.field_project_mentor}
+                  projectDetails={projectDetails}
+                  userTokenId={
+                    typeof token?.uuid === "string" ? token.uuid : ""
+                  }
+                  currentUserEmail={token?.email || ""}
+                />
+              )}
             </section>
 
             {/* Reward (Mobile View) */}
@@ -128,7 +160,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             )}
 
             {/* Be a Member Button / Claimed Status (Mobile View) */}
-            {/* {!isUserInProject ? (
+            {!isUserInProject ? (
               canUserBeAddedProject ? (
                 <div className="mt-8 text-center xl:hidden">
                   <TeamModalForm
@@ -145,7 +177,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">
                 You are already part of another bounty project.
               </p>
-            )} */}
+            )}
           </div>
 
           {/* Sidebar (Desktop View) */}
@@ -160,23 +192,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-lg">
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
-                    <div
-                      className={`project-category w-max ${
-                        project.category.name
-                          .toLowerCase()
-                          .replace(/\s+/g, "") === "pool1"
-                          ? "project-category--1"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool2"
-                          ? "project-category--2"
-                          : project.category.name
-                              .toLowerCase()
-                              .replace(/\s+/g, "") === "pool3"
-                          ? "project-category--3"
-                          : "text-black"
-                      }`}
-                    >
+                    <div className={`w-max text-black`}>
                       {project.category.name}
                     </div>
                   </div>
@@ -194,7 +210,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               )}
 
               {/* Be a Member Button / Claimed Status - Desktop only */}
-              {/* {!isUserInProject ? (
+              {!isUserInProject ? (
                 canUserBeAddedProject ? (
                   <div className="mt-6 pt-6 border-t border-gray-200 text-center">
                     <TeamModalForm
@@ -211,7 +227,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
                   You are already part of another bounty project.
                 </p>
-              )} */}
+              )}
             </div>
           </aside>
         </div>
