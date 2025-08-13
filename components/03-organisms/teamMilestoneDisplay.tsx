@@ -5,9 +5,9 @@ import {
   postCommentForMilestone,
   sendNotificationEmail,
 } from "@/lib/queries/updateData";
-import { updateMilestoneStatus, deleteComment } from "@/lib/queries/updateData";
+import { updateMilestoneStatus, deleteComment, updateComment } from "@/lib/queries/updateData";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 function decodeAndStripHtml(html: string) {
   if (!html) return "";
@@ -164,6 +164,9 @@ function TeamMilestoneGroup({
   const [newComment, setNewComment] = useState("");
   const [notify, setNotify] = useState(false);
 
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+
   const selectedMilestone = milestones.find(
     (m: ProcessedMilestone) => m.id === selectedId
   );
@@ -242,6 +245,36 @@ function TeamMilestoneGroup({
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } else {
       alert("Failed to delete comment.");
+    }
+  };
+
+  const handleEditClick = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditText(comment.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditText("");
+  };
+
+  const handleSaveEdit = async (commentId: string) => {
+    if (!editText.trim()) {
+      alert("Comment cannot be empty.");
+      return;
+    }
+
+    const result = await updateComment(commentId, editText.trim());
+    if (result.success) {
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId ? { ...c, text: decodeAndStripHtml(editText.trim()) } : c
+        )
+      );
+      setEditingCommentId(null);
+      setEditText("");
+    } else {
+      alert("Failed to update comment.");
     }
   };
 
@@ -349,22 +382,61 @@ function TeamMilestoneGroup({
               key={comment.id}
               className="flex justify-between items-start p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
-              {/* Comment text */}
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900">{comment.name}</p>
-                <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">
-                  {comment.text}
-                </p>
+
+                {editingCommentId === comment.id ? (
+                  <>
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="block w-full border border-gray-300 rounded-sm p-2 text-sm"
+                      rows={2}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleSaveEdit(comment.id)}
+                        className="bg-primary hover:bg-primary-700 text-white cursor-pointer"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="cursor-pointer"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">
+                    {comment.text}
+                  </p>
+                )}
               </div>
 
-              {/* Delete button (only for current user) */}
               {comment.name === currentUserEmail && (
-                <button
-                  onClick={() => handleDelete(comment.id)}
-                  className="ml-3 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
-          title="Delete comment">
-                  <Trash2 size={16} strokeWidth={2} />
-                </button>
+                <div className="flex flex-col items-center gap-2 ml-3">
+                  {editingCommentId !== comment.id && (
+                    <button
+                      onClick={() => handleEditClick(comment)}
+                      className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50 transition-colors cursor-pointer"
+                      title="Edit comment"
+                    >
+                      <Edit size={16} strokeWidth={2} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(comment.id)}
+                    className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Delete comment"
+                  >
+                    <Trash2 size={16} strokeWidth={2} />
+                  </button>
+                </div>
               )}
             </div>
           ))}
