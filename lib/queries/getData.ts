@@ -18,6 +18,7 @@ export const GET_PROJECTS = gql`
             ... on TermCategory {
               id
               name
+              weight
             }
           }
           title
@@ -57,6 +58,7 @@ export const GET_PROJECT_BY_PATH = gql`
               ... on TermCategory {
                 id
                 name
+                weight
               }
             }
             defaultImage {

@@ -109,7 +109,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
                     {/* Category */}
-                    <div className={`w-max text-black`}>
+                    <div className={`w-max text-black project-category project-category--${project.category.weight}`}>
                       {project.category.name}
                     </div>
                   </div>
@@ -120,12 +120,13 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             {/* Description */}
             <section className="p-5 space-y-6 bg-white rounded-2xl shadow-xl">
               {/* Project Image */}
-              <div className="relative w-full h-96 overflow-hidden shadow-xl">
+              <div className="relative w-full min-h-[450px] overflow-hidden shadow-xl">
                 <Image
                   src={project.defaultImage?.url || "/image-placeholder.webp"}
                   alt="Project preview"
-                  fill
-                  className="object-cover"
+                  width={1080}
+                  height={450}
+                  className="object-contain w-full h-[450px]"
                   sizes="(max-width: 1024px) 100vw, 75vw"
                   priority
                 />
@@ -192,7 +193,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-lg">
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
-                    <div className={`w-max text-black`}>
+                    <div className={`w-max text-black project-category project-category--${project.category.weight}`}>
                       {project.category.name}
                     </div>
                   </div>

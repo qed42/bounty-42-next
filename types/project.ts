@@ -9,6 +9,7 @@ export type ProjectNode = {
   category: {
     id: string;
     name: string;
+    weight: number; 
   };
   defaultImage?: { url?: string };
   projectTeam?: Array<{
@@ -27,6 +28,7 @@ export type Card = {
   title: string;
   description: string;
   category: string;
+  weight: number; 
   image: string;
   link: string;
 };
@@ -49,6 +51,7 @@ export type CardItemProps = {
   title: string;
   description: string;
   category: string;
+  weight: number;
   image: string;
   link: string;
 };
