@@ -181,6 +181,7 @@ async function handleProjectMilestones(
             attributes: {
               field_milestone_name: milestone.title,
               field_milestone_details: milestone.description,
+              field_milestone_status: "not_started"
             },
           },
         });
@@ -355,6 +356,8 @@ export async function addTeamToProject(
     ];
   }
 
+  console.log(`PROJECT ID`, projectId)
+
   const updatedProject = await drupal.updateResource(
     "node--project",
     projectId,
@@ -466,7 +469,7 @@ export const sendNotificationEmail = async (
     <p>Hi, there’s been some recent activity in the project <strong>${name}</strong>.</p>
     <p>You can check it out here: <a href="${path}">${path}</a></p>
     <br/>
-    <p style="color: #555;">— Bounty Portal Team</p>
+    <p style="color: #555;">- Bounty Portal Team</p>
   `;
 
   const textContent = `
@@ -476,7 +479,7 @@ export const sendNotificationEmail = async (
 
     Check it out here: ${path}
 
-    — Bounty Portal Team
+    - Bounty Portal Team
       `;
 
   try {
