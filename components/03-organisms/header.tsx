@@ -15,8 +15,20 @@ import { signOut, useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
 const navItems = {
-  loggedIn: [{ title: "Projects", href: "/project" }],
-  notLoggedIn: [{ title: "Login", href: "/login" }],
+  loggedIn: [
+    {
+      title: "Bounty Framework",
+      href: "https://docs.google.com/document/d/167xbPmK4-92-XVEzkIVu3fyHworO5WUg1Rh4BF_l-5E/edit?tab=t.0",
+    },
+    { title: "Projects", href: "/project" },
+  ],
+  notLoggedIn: [
+    {
+      title: "Bounty Framework",
+      href: "https://docs.google.com/document/d/167xbPmK4-92-XVEzkIVu3fyHworO5WUg1Rh4BF_l-5E/edit?tab=t.0",
+    },
+    { title: "Login", href: "/login" },
+  ],
 };
 
 export function Header() {
@@ -51,6 +63,7 @@ export function Header() {
                       ? "text-primary" // Active link color
                       : "text-gray-800 hover:text-primary" // Inactive link color
                   }`}
+                  target="_blank"
                 >
                   {item.title}
                 </Link>
@@ -71,6 +84,7 @@ export function Header() {
                       ? "text-primary" // Active link color
                       : "text-gray-800 hover:text-primary" // Inactive link color
                   }`}
+                  target="_blank"
                 >
                   {item.title}
                 </Link>
@@ -103,6 +117,7 @@ export function Header() {
                       ? "text-primary" // Active link color
                       : "text-gray-800 hover:text-primary" // Inactive link color
                   }`}
+                      target="_blank"
                       onClick={() => setIsOpen(false)} // Close sheet on link click
                     >
                       {item.title}
@@ -119,6 +134,7 @@ export function Header() {
                     <Link
                       key={item.title}
                       href={item.href}
+                      target="_blank"
                       className={`text-lg font-medium no-underline transition-colors
                   ${
                     pathname === item.href

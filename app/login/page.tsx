@@ -4,9 +4,18 @@ import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LoginPage() {
   const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/project");
+    }
+  }, [session, router]);
 
   if (session) {
     return (
