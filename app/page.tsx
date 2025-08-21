@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Trophy, Target, Code } from "lucide-react";
 import Link from "next/link";
+import { WhyParticipateSection } from "@/components/03-organisms/why-participate-section";
 
 export const metadata = {
   title: "Earn Rewards Building AI Projects | QED42 AI Bounty Platform",
@@ -54,6 +55,9 @@ export default function HomePage() {
           </div> */}
         </div>
       </section>
+
+      {/* Why should you participate? */}
+      <WhyParticipateSection />
 
       {/* How It Works */}
       <section id="how-it-works" className="py-20 px-4 bg-white">
