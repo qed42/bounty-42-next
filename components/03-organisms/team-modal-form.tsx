@@ -25,6 +25,7 @@ import type { ProjectTeam } from "@/types/project";
 interface TeamModalFormProps {
   project: ProjectNode;
   projectTeams: ProjectTeam[];
+  projectMentor: string;
   onTeamCreated?: () => void;
 }
 
@@ -56,6 +57,7 @@ interface Milestone {
 export default function TeamModalForm({
   project,
   projectTeams,
+  projectMentor,
   onTeamCreated,
 }: TeamModalFormProps) {
   const { data: session } = useSession();
@@ -201,10 +203,16 @@ export default function TeamModalForm({
             milestones: validMilestones,
           };
 
+          const projectDetails = {
+            name: project?.title ?? null,
+            path: project?.path ?? null,
+            mentor: projectMentor,
+          }
           const res = await addTeamToProject(
             submitData,
             project.id,
-            projectTeams
+            projectTeams,
+            projectDetails,
           );
           if (!res?.success) {
             setGlobalMessage({
