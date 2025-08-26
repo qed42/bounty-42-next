@@ -66,6 +66,10 @@ export const GET_PROJECT_BY_PATH = gql`
               title
               alt
             }
+            projectMentor {
+              name
+              mail
+            }
             executionTracks {
               ... on ParagraphProjectMilestone {
                 __typename

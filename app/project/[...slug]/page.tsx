@@ -88,6 +88,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         )
       : false;
 
+  const teamMentorEmail = response?.field_project_mentor?.mail ?? "";
+
   return (
     <AuthGuard>
       <div className="container mx-auto px-4 py-12 xl:py-20">
@@ -109,7 +111,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
                     {/* Category */}
-                    <div className={`w-max text-black project-category project-category--${project.category.weight}`}>
+                    <div
+                      className={`w-max text-black project-category project-category--${project.category.weight}`}
+                    >
                       {project.category.name}
                     </div>
                   </div>
@@ -167,6 +171,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <TeamModalForm
                     project={project}
                     projectTeams={projectTeams}
+                    projectMentor={teamMentorEmail}
                   />
                 </div>
               ) : (
@@ -193,7 +198,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-lg">
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
-                    <div className={`w-max text-black project-category project-category--${project.category.weight}`}>
+                    <div
+                      className={`w-max text-black project-category project-category--${project.category.weight}`}
+                    >
                       {project.category.name}
                     </div>
                   </div>
@@ -217,6 +224,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     <TeamModalForm
                       project={project}
                       projectTeams={projectTeams}
+                      projectMentor={teamMentorEmail}
                     />
                   </div>
                 ) : (

@@ -181,7 +181,7 @@ async function handleProjectMilestones(
             attributes: {
               field_milestone_name: milestone.title,
               field_milestone_details: milestone.description,
-              field_milestone_status: "not_started"
+              field_milestone_status: "not_started",
             },
           },
         });
@@ -278,7 +278,8 @@ async function handleProjectMilestones(
 export async function addTeamToProject(
   teamData: TeamData,
   projectId: string,
-  allProjectTeams: ProjectTeam[]
+  allProjectTeams: ProjectTeam[],
+  projectDetails: { name: string; path: string; mentor: string | null }
 ) {
   const { member1, member2, member3, teamName, milestones } = teamData;
   const teamMails = [member1, member2, member3];
@@ -356,7 +357,12 @@ export async function addTeamToProject(
     ];
   }
 
-  console.log(`PROJECT ID`, projectId)
+  console.log(`PROJECT ID`, projectId);
+
+  console.log(`HEYEYEYEYEYEYEYEYE`, teamData);
+
+  const emails = projectDetails.mentor != null ? [projectDetails.mentor] : [];
+  sendTeamSubmissionEmail(emails, teamData, projectDetails)
 
   const updatedProject = await drupal.updateResource(
     "node--project",
@@ -499,6 +505,112 @@ export const sendNotificationEmail = async (
     const data = await response.json();
 
     if (response.ok) {
+      return {
+        success: true,
+        data,
+      };
+    } else {
+      return {
+        success: false,
+        error: data.error || "Failed to send email",
+      };
+    }
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    return { success: false, error };
+  }
+};
+
+export const sendTeamSubmissionEmail = async (
+  emails: string[],
+  teamDetails: {
+    teamName: string;
+    milestones: { id: number; title: string; description: string }[];
+  },
+  projectDetails: { name: string; path: string }
+) => {
+  const { teamName, milestones } = teamDetails;
+  const { name: projectName, path: projectPath } = projectDetails;
+
+const subject = `New Team Submission: "${teamName}" for Project "${projectName}"`;
+
+  console.log(`EMAILS`, emails)
+  console.log("TEAM DETAILS", teamDetails)
+  console.log("PROJECT DETAILS", projectDetails)
+
+  // Build milestone list HTML
+  const milestoneHtml = milestones
+    .map(
+      (m) => `
+        <li style="margin-bottom: 10px;">
+          <strong>${m.title}</strong><br/>
+          <span style="color: #555;">${m.description}</span>
+        </li>
+      `
+    )
+    .join("");
+
+  // HTML Email Body
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+      <h2 style="color: #2c3e50;">Hello!</h2>
+      <p>There was a new team submission for the project <strong>${projectName}</strong>.</p>
+      <p>Here are the team details:</p>
+
+      <h3 style="color: #1a73e8; margin-bottom: 5px;">Team Name: ${teamName}</h3>
+
+      <h4 style="margin-top: 20px; color: #2c3e50;">Milestones:</h4>
+      <ul style="padding-left: 20px; list-style: disc;">
+        ${milestoneHtml}
+      </ul>
+
+      <div style="margin-top: 25px;">
+        <a href="${projectPath}" 
+           style="display:inline-block; padding: 10px 18px; background-color:#1a73e8; color:#fff; text-decoration:none; border-radius:6px; font-weight:500;">
+           View Project
+        </a>
+      </div>
+
+      <br/>
+      <p style="color: #555;">- Bounty Portal Team</p>
+    </div>
+  `;
+
+  // Plain Text Email Body
+  const textContent = `
+    Hello,
+
+    There was a new team submission for the project "${projectName}".
+    Here are the team details:
+
+    Team Name: ${teamName}
+
+    Milestones:
+    ${milestones.map((m) => `- ${m.title}: ${m.description}`).join("\n")}
+
+    View the project here: ${projectPath}
+
+    - Bounty Portal Team
+  `;
+
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: emails,
+        subject,
+        htmlContent,
+        textContent,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log(`SUCESSS`, response)
       return {
         success: true,
         data,
