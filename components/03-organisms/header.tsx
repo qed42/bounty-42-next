@@ -21,6 +21,7 @@ const navItems = {
       href: "https://docs.google.com/document/d/167xbPmK4-92-XVEzkIVu3fyHworO5WUg1Rh4BF_l-5E/edit?tab=t.0",
     },
     { title: "Projects", href: "/project" },
+    { title: "Profile", href: "/profile" },
   ],
   notLoggedIn: [
     {

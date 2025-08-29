@@ -209,3 +209,35 @@ export async function getCommentsForEntity(
     return [];
   }
 }
+
+export async function getMentorProjects(email: string): Promise<DrupalNode[]> {
+  // Expand mentors so we get their user fields (mail, name, etc.)
+  const params: Record<string, string> = {
+    include: "field_project_mentor,field_category,field_default_image",
+    "fields[media--image]": "name,field_media_image",
+  };
+
+  try {
+    const projects = await drupal.getResourceCollection<DrupalNode[]>(
+      "node--project",
+      { params }
+    );
+
+    const mentorProjects = projects.filter((project) => {
+      const mentors = Array.isArray(project.field_project_mentor)
+        ? project.field_project_mentor
+        : project.field_project_mentor
+        ? [project.field_project_mentor]
+        : [];
+
+      // Return true if this project has a mentor with the given email
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return mentors.some((mentor: any) => mentor?.mail === email);
+    });
+
+    return mentorProjects;
+  } catch (error) {
+    console.error("Error fetching mentor projects:", error);
+    return [];
+  }
+}
