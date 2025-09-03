@@ -260,4 +260,12 @@
       @apply w-[30px] h-[30px];
     }
   }
+
+  .accordion-trigger {
+    svg.lucide-chevron-down,
+    svg.lucide-chevron-up {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
 }

@@ -39,6 +39,61 @@ export const GET_PROJECTS = gql`
   }
 `;
 
+// export const GET_PROJECT_BY_PATH = gql`
+//   query GetProjectByPath($path: String!) {
+//     route(path: $path) {
+//       ... on RouteInternal {
+//         entity {
+//           ... on NodeProject {
+//             id
+//             title
+//             durations
+//             path
+//             body {
+//               summary
+//               value
+//             }
+//             reward
+//             category {
+//               ... on TermCategory {
+//                 id
+//                 name
+//                 weight
+//               }
+//             }
+//             defaultImage {
+//               url
+//               title
+//               alt
+//             }
+//             executionTracks {
+//               ... on ParagraphProjectMilestone {
+//                 __typename
+//                 id
+//               }
+//             }
+//             teams {
+//               ... on TermProjectTeam {
+//                 id
+//                 name
+//                 teamMembers {
+//                   id
+//                   name
+//                   mail
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       }
+//       ... on RouteRedirect {
+//         url
+//         status
+//       }
+//     }
+//   }
+// `;
+
 export const GET_PROJECT_BY_PATH = gql`
   query GetProjectByPath($path: String!) {
     route(path: $path) {
@@ -69,7 +124,23 @@ export const GET_PROJECT_BY_PATH = gql`
             executionTracks {
               ... on ParagraphProjectMilestone {
                 __typename
+                executionPlan {
+                  ... on ParagraphMilestone {
+                    id
+                    status
+                    milestoneStatus
+                    milestoneName
+                    milestoneDetails
+                  }
+                }
                 id
+                team {
+                  ... on TermProjectTeam {
+                    id
+                    name
+                  }
+                }
+                selected
               }
             }
             teams {

@@ -25,7 +25,7 @@ export default async function ProfilePage() {
   return (
     <AuthGuard>
       <div className="container mx-auto px-4 my-5 lg:my-10">    
-        {mentorProjects && mentorProjects.length > 0 && (
+        
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-5">
             {/* Profile Section */}
             <Card className="lg:col-span-2">
@@ -53,39 +53,38 @@ export default async function ProfilePage() {
               </CardContent>
             </Card>
             {/* Projects Section */}
-            <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <FolderOpen className="h-5 w-5" />
-                  <h2 className="text-xl font-semibold">My Projects</h2>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                  {mentorProjects.map((project, index) => (
-                    <CardItem
-                      key={project.id}
-                      index={index}
-                      title={project.title}
-                      description={project.body?.summary ?? "No description available."}
-                      category={project.field_category?.name ?? "Uncategorized"}
-                      weight={project.field_category?.weight ?? 0}
-                      image={
-                        project.field_default_image?.uri?.url
-                          ? `${process.env.DRUPAL_AUTH_URI}${project.field_default_image.uri.url}`
-                          : "/default-placeholder.jpg"
-                      }
-                      link={project?.path?.alias}
-                      id={project.id}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              {mentorProjects && mentorProjects.length > 0 && (
+                <Card className="lg:col-span-2">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-foreground flex items-center gap-2">
+                      <FolderOpen className="h-5 w-5" />
+                      <h2 className="text-xl font-semibold">My Projects</h2>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                      {mentorProjects.map((project, index) => (
+                        <CardItem
+                          key={project.id}
+                          index={index}
+                          title={project.title}
+                          description={project.body?.summary ?? "No description available."}
+                          category={project.field_category?.name ?? "Uncategorized"}
+                          weight={project.field_category?.weight ?? 0}
+                          image={
+                            project.field_default_image?.uri?.url
+                              ? `${process.env.DRUPAL_AUTH_URI}${project.field_default_image.uri.url}`
+                              : "/default-placeholder.jpg"
+                          }
+                          link={project?.path?.alias}
+                          id={project.id}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
           </div>
-        )}
-
-
       </div>
     </AuthGuard>
   );

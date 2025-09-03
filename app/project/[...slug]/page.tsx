@@ -13,6 +13,12 @@ import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapp
 import { getCommentsForEntity } from "@/lib/queries/getData";
 import { getSessionToken } from "@/lib/getSessionToken";
 import { canUserAccessProjectUpdates } from "@/lib/utils";
+
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { getMentorProjects, getProjectById } from "@/lib/queries/getData";
+import ExecutionTrackSection from "@/components/03-organisms/ExecutionTrackSection";
+
 interface ExecutionTrack {
   field_team: {
     field_team_members: Array<{ mail: string }>;
@@ -88,6 +94,25 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         )
       : false;
 
+  const session = await getServerSession(authOptions);
+  
+    if (!session?.user?.email) {
+      return (
+        <div className="container mx-auto py-12">
+          Please log in to view your profile.
+        </div>
+      );
+    }
+  // Fetch projects where the user is a mentor
+  const mentorProjects = await getMentorProjects(session.user.email);
+  const projectById = await getProjectById(project.id);
+
+  // Check if this user is the project mentor
+  const isProjectMentor =
+    mentorProjects &&
+    mentorProjects.length > 0 &&
+    projectById?.field_project_mentor?.mail === session.user.email;
+
   return (
     <AuthGuard>
       <div className="container mx-auto px-4 py-12 xl:py-20">
@@ -161,7 +186,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             )}
 
             {/* Be a Member Button / Claimed Status (Mobile View) */}
-            {/* {!isUserInProject ? (
+            {!isUserInProject ? (
               canUserBeAddedProject ? (
                 <div className="mt-8 text-center xl:hidden">
                   <TeamModalForm
@@ -178,7 +203,20 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               <p className="mt-8 text-center text-lg text-gray-600 xl:hidden">
                 You are already part of another bounty project.
               </p>
-            )} */}
+            )}
+
+            {/* Mentor Projects - Execution Tracks and Plans */}  
+            { isProjectMentor && (
+              <>
+              {/* Execution Tracks */}
+              {project.executionTracks && project.executionTracks.length > 0 && (
+                <>
+                  <ExecutionTrackSection executionTracks={project.executionTracks} />
+                </>
+              )}
+              </>
+            )}
+
           </div>
 
           {/* Sidebar (Desktop View) */}
@@ -211,7 +249,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               )}
 
               {/* Be a Member Button / Claimed Status - Desktop only */}
-              {/* {!isUserInProject ? (
+              {!isUserInProject ? (
                 canUserBeAddedProject ? (
                   <div className="mt-6 pt-6 border-t border-gray-200 text-center">
                     <TeamModalForm
@@ -228,7 +266,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <p className="mt-6 pt-6 border-t border-gray-200 text-center text-lg text-gray-600">
                   You are already part of another bounty project.
                 </p>
-              )} */}
+              )}
             </div>
           </aside>
         </div>
