@@ -13,6 +13,15 @@ import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapp
 import { getCommentsForEntity } from "@/lib/queries/getData";
 import { getSessionToken } from "@/lib/getSessionToken";
 import { canUserAccessProjectUpdates } from "@/lib/utils";
+
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { getMentorProjects } from "@/lib/queries/getData";
+import { CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge";
+
+
 interface ExecutionTrack {
   field_team: {
     field_team_members: Array<{ mail: string }>;
@@ -87,6 +96,17 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           token?.email
         )
       : false;
+
+  const session = await getServerSession(authOptions);
+  
+    if (!session?.user?.email) {
+      return (
+        <div className="container mx-auto py-12">
+          Please log in to view your profile.
+        </div>
+      );
+    }
+  const mentorProjects = await getMentorProjects(session.user.email);
 
   return (
     <AuthGuard>
@@ -179,6 +199,72 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 You are already part of another bounty project.
               </p>
             )}
+
+            {/* Mentor Projects - Execution Tracks and Plans */}  
+            {mentorProjects && mentorProjects.length > 0 && (
+              <>
+              {/* Execution Tracks */}
+              {project.executionTracks && project.executionTracks.length > 0 && (
+                <>
+                  <CardHeader className="p-0">
+                    <CardTitle className="text-2xl">Execution tracks </CardTitle>
+                  </CardHeader>
+                  {/* {project.executionTracks.team.name} */}
+                  <Accordion type="single" collapsible>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {project.executionTracks.map((track: any, idx: number) => (
+                      <AccordionItem key={idx} value={`milestone-${idx}`} className="p-0">
+                        <AccordionTrigger className="p-4 mb-4 hover:no-underline hover:cursor-pointer accordion-trigger bg-gray-200" key={track.id}>
+                          <div className="text-xl">Execution track - Plan {String.fromCharCode(65 + idx)}</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4">
+                          <Accordion type="single" collapsible>
+                          {track.executionPlan && track.executionPlan.length > 0 && (
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            track.executionPlan.map((plan: any, idx: number) => (
+                              <AccordionItem key={idx} value={`milestone-${idx}`} className="p-0">
+                                <AccordionTrigger className="py-4 hover:no-underline hover:cursor-pointer accordion-trigger">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-medium">{plan.milestoneName}</h3>
+                                    <Badge
+                                      className={`
+                                        rounded-full px-2 py-0.5 text-xs
+                                        ${
+                                          plan.milestoneStatus === "in_progress"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : plan.milestoneStatus === "completed"
+                                            ? "bg-green-100 text-green-800"
+                                            : plan.milestoneStatus === "not_started"
+                                            ? "bg-gray-100 text-gray-800"
+                                            : "bg-blue-100 text-blue-800" // fallback
+                                        }
+                                      `}
+                                    >
+                                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                      {plan.milestoneStatus
+                                        .replace(/_/g, " ")
+                                        .replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                    </Badge>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pb-4">
+                                  <div key={plan.id} style={{ marginBottom: "1rem" }}>
+                                    <div className="text-md text-gray-700">{plan.milestoneDetails}</div>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))
+                          )}
+                          </Accordion>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </>
+              )}
+              </>
+            )}
+
           </div>
 
           {/* Sidebar (Desktop View) */}
