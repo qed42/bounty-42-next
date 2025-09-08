@@ -524,3 +524,31 @@ export async function deleteComment(commentId: string) {
     return { success: false };
   }
 }
+
+// Update execution track selection
+export async function updateExecutionTrackStatus(
+  trackId: string,
+  selected: boolean
+) {
+  try {
+    const response = await drupal.updateResource(
+      "paragraph--project_milestones", // JSON:API type
+      trackId,
+      {
+        data: {
+          type: "paragraph--project_milestones",
+          id: trackId,
+          attributes: {
+            field_selected: selected,
+          },
+        },
+      }
+    );
+
+    console.log("Execution track updated:", response);
+    return { success: true, data: response };
+  } catch (error) {
+    console.error("Failed to update execution track status:", error);
+    return { success: false, error };
+  }
+}

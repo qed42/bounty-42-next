@@ -264,8 +264,18 @@
   .accordion-trigger {
     svg.lucide-chevron-down,
     svg.lucide-chevron-up {
-      width: 1.5rem;
-      height: 1.5rem;
+      @apply text-foreground w-[1.5rem] h-[1.5rem];
+    }
+
+    &.active {
+      svg.lucide-chevron-down,
+      svg.lucide-chevron-up {
+        @apply text-white;
+      }
+    }
+
+    &__header[aria-expanded="true"] {
+      @apply rounded-b-none;
     }
   }
 }

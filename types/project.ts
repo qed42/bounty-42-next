@@ -35,6 +35,20 @@ export type ProjectNode = {
       milestoneDetails?: string;
     }> | null;
   }> | null;
+  teams?: Array<{
+    __typename: "TermProjectTeam";
+    id: string;
+    name: string;
+    teamMembers?: Array<{
+      id: string;
+      name: string;
+      mail: string;
+    }> | null;
+  }> | null;
+  projectMentor?: {
+    mail: string;
+    name: string;
+  };
 };
 
 export type ProjectEdge = {
