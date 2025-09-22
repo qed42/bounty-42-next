@@ -18,6 +18,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { getMentorProjects, getProjectById } from "@/lib/queries/getData";
 import ExecutionTrackSection from "@/components/03-organisms/ExecutionTrackSection";
+import CommentsFormWrapper from "@/components/03-organisms/CommentsFormWrapper";
+
 
 interface ExecutionTrack {
   field_team: {
@@ -58,6 +60,16 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   const response = await getProjectWithTeamMembersById(project.id);
   const comments = await getCommentsForEntity(project.id);
+  // console.log("Comments:", comments);
+  
+  // console.log("Project:", project);
+  // console.log("Project comments:", comments);
+  // // If you want to log individual values
+  // comments.forEach((comment) => {
+  //   console.log("Comment ID:", comment.entity_id.id);
+  // });
+
+
   // const projectTeams = response?.field_teams ?? [];
   const projectTeams =
     response?.field_execution_tracks?.map(
@@ -214,6 +226,16 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <ExecutionTrackSection executionTracks={project.executionTracks} />
                 </>
               )}
+
+              {/* Comments */}
+              {comments && (
+                <>
+                  {comments && comments[0]?.entity_id?.id && (
+                    <CommentsFormWrapper entityId={comments[0].entity_id.id} initialComments={comments} />
+                  )}
+                </>
+              )}
+              
               </>
             )}
 

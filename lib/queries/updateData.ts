@@ -552,3 +552,103 @@ export async function updateExecutionTrackStatus(
     return { success: false, error };
   }
 }
+
+// Create new comment
+export async function createComment(
+  entityId: string,
+  subject: string,
+  body: string,
+  uid?: string // optional Drupal user id
+) {
+  try {
+    const payload: any = {
+      data: {
+        type: "comment--comment",
+        attributes: {
+          subject,
+          entity_type: "node",
+          field_name: "field_comments",
+          comment_body: {
+            value: body,
+            format: "basic_html",
+          },
+        },
+        relationships: {
+          entity_id: {
+            data: {
+              type: "node--project", // adjust if your node type differs
+              id: entityId,
+            },
+          },
+        },
+      },
+    };
+
+    // attach uid relationship only if provided
+    if (uid) {
+      payload.data.relationships.uid = {
+        data: {
+          type: "user--user",
+          id: uid,
+        },
+      };
+    }
+
+    const response = await drupal.createResource("comment--comment", payload);
+
+    console.log("✅ createResource response:", response);
+    return { success: true, data: response };
+  } catch (error: any) {
+    console.error("❌ createResource error:", error);
+    return { success: false, error };
+  }
+}
+
+
+// Update existing comment
+export async function updateComment(
+  commentId: string,
+  subject: string,
+  body: string
+) {
+  try {
+    const payload: any = {
+      data: {
+        type: "comment--comment",
+        id: commentId,
+        attributes: {
+          subject,
+          comment_body: {
+            value: body,
+            format: "basic_html",
+          },
+        },
+      },
+    };
+
+    // Pass `type`, `id`, `payload`
+    const response = await drupal.updateResource(
+      "comment--comment",
+      commentId,
+      payload
+    );
+
+    console.log("✅ updateResource response:", response);
+    return { success: true, data: response };
+  } catch (error: any) {
+    console.error("❌ updateComment error:", error);
+    return { success: false, error };
+  }
+}
+
+
+// Delete a comment
+export async function deleteCommentnew(commentId: string) {
+  try {
+    await drupal.deleteResource("comment--comment", commentId);
+    return { success: true };
+  } catch (error: any) {
+    console.error("❌ deleteComment error:", error);
+    return { success: false, error };
+  }
+}
