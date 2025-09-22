@@ -11,11 +11,13 @@ export default function CommentSection({
   comments,
   onDelete,
   onUpdate,
+  executionTrackSelected,
 }: {
    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   comments: any[];
   onDelete?: (id: string) => void;
   onUpdate?: (id: string, subject: string, body: string) => void;
+  executionTrackSelected: string;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState<string>("");
@@ -52,10 +54,20 @@ export default function CommentSection({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mt-6 mb-6">
-        <MessageCircle className="h-7 w-7 text-primary" />
-        <h4 className="text-2xl font-semibold text-foreground">
-          Comments ({comments.length})
-        </h4>
+          {executionTrackSelected ? (
+          <>
+            <h4 className="text-2xl font-semibold text-foreground">
+              Comments For Execution Plan
+            </h4>
+          </>
+          ) : (
+            <>
+            <MessageCircle className="h-7 w-7 text-primary" />
+            <h4 className="text-2xl font-semibold text-foreground">
+              Comments ({comments.length})
+            </h4>
+            </>
+          )}
       </div>
 
       {comments.map((comment) => (
@@ -104,18 +116,22 @@ export default function CommentSection({
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => handleEdit(comment)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <Edit className="h-5 w-5 cursor-pointer" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(comment.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 className="h-5 w-5 cursor-pointer" />
-                  </button>
+                {!executionTrackSelected && (
+                  <>
+                    <button
+                      onClick={() => handleEdit(comment)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <Edit className="h-5 w-5 cursor-pointer" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(comment.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-5 w-5 cursor-pointer" />
+                    </button>
+                  </>
+                )}
                 </>
               )}
             </div>

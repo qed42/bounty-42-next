@@ -9,11 +9,15 @@ import { DrupalComment } from "@/lib/type";
 export default function CommentsFormWrapper({
   entityId,
   initialComments,
+  executionTrackSelected,
 }: {
   entityId: string;
   initialComments: DrupalComment[];
+  executionTrackSelected: string;
 }) {
   const [comments, setComments] = useState(initialComments);
+
+  console.log('executionTrackSelected', executionTrackSelected);
 
   const handleCommentAdded = (newComment: DrupalComment) => {
     setComments((prev) => [newComment, ...prev]);
@@ -48,8 +52,12 @@ export default function CommentsFormWrapper({
         comments={comments}
         onDelete={handleDelete}
         onUpdate={handleUpdate}
+        executionTrackSelected={executionTrackSelected}
       />
-      <CommentForm entityId={entityId} onSuccess={handleCommentAdded} />
+      {!executionTrackSelected && (
+        <CommentForm entityId={entityId} onSuccess={handleCommentAdded} />
+      )}
+      {/* <CommentForm entityId={entityId} onSuccess={handleCommentAdded} /> */}
     </div>
   );
 }

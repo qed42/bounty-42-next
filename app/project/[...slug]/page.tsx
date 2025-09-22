@@ -62,7 +62,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const comments = await getCommentsForEntity(project.id);
   // console.log("Comments:", comments);
   
-  // console.log("Project:", project);
+  console.log("Project:", project);
   // console.log("Project comments:", comments);
   // // If you want to log individual values
   // comments.forEach((comment) => {
@@ -228,10 +228,24 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               )}
 
               {/* Comments */}
-              {comments && (
+              {/* {comments && (
                 <>
                   {comments && comments[0]?.entity_id?.id && (
                     <CommentsFormWrapper entityId={comments[0].entity_id.id} initialComments={comments} />
+                  )}
+                </>
+              )} */}
+              {comments && (
+                <>
+                  {comments[0]?.entity_id?.id && (
+                    <CommentsFormWrapper
+                      entityId={comments[0].entity_id.id}
+                      initialComments={comments}
+                      executionTrackSelected={
+                        project?.executionTracks?.some((track) => track?.selected === true) ||
+                        false
+                      }
+                    />
                   )}
                 </>
               )}
