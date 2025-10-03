@@ -20,12 +20,12 @@ import { getMentorProjects, getProjectById } from "@/lib/queries/getData";
 import ExecutionTrackSection from "@/components/03-organisms/ExecutionTrackSection";
 import CommentsFormWrapper from "@/components/03-organisms/CommentsFormWrapper";
 
-
 interface ExecutionTrack {
   field_team: {
     field_team_members: Array<{ mail: string }>;
   };
   field_selected: boolean;
+  selected?: boolean;
 }
 interface PageProps {
   params: Promise<{ slug: string[] }>; // Changed to Promise
@@ -61,14 +61,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const response = await getProjectWithTeamMembersById(project.id);
   const comments = await getCommentsForEntity(project.id);
   // console.log("Comments:", comments);
-  
-  console.log("Project:", project);
   // console.log("Project comments:", comments);
   // // If you want to log individual values
   // comments.forEach((comment) => {
   //   console.log("Comment ID:", comment.entity_id.id);
   // });
-
 
   // const projectTeams = response?.field_teams ?? [];
   const projectTeams =
@@ -107,14 +104,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       : false;
 
   const session = await getServerSession(authOptions);
-  
-    if (!session?.user?.email) {
-      return (
-        <div className="container mx-auto py-12">
-          Please log in to view your profile.
-        </div>
-      );
-    }
+
+  if (!session?.user?.email) {
+    return (
+      <div className="container mx-auto py-12">
+        Please log in to view your profile.
+      </div>
+    );
+  }
   // Fetch projects where the user is a mentor
   const mentorProjects = await getMentorProjects(session.user.email);
   const projectById = await getProjectById(project.id);
@@ -146,7 +143,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
                     {/* Category */}
-                    <div className={`w-max text-black project-category project-category--${project.category.weight}`}>
+                    <div
+                      className={`w-max text-black project-category project-category--${project.category.weight}`}
+                    >
                       {project.category.name}
                     </div>
                   </div>
@@ -217,42 +216,54 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </p>
             )}
 
-            {/* Mentor Projects - Execution Tracks and Plans */}  
-            { isProjectMentor && (
+            {/* Mentor Projects - Execution Tracks and Plans */}
+            {isProjectMentor && (
               <>
-              {/* Execution Tracks */}
-              {project.executionTracks && project.executionTracks.length > 0 && (
-                <>
-                  <ExecutionTrackSection executionTracks={project.executionTracks} />
-                </>
-              )}
+                {/* Execution Tracks */}
+                {project.executionTracks &&
+                  project.executionTracks.length > 0 && (
+                    <>
+                      <ExecutionTrackSection
+                        executionTracks={project.executionTracks}
+                      />
+                    </>
+                  )}
 
-              {/* Comments */}
-              {/* {comments && (
+                {/* Comments */}
+                {/* {comments && (
                 <>
                   {comments && comments[0]?.entity_id?.id && (
                     <CommentsFormWrapper entityId={comments[0].entity_id.id} initialComments={comments} />
                   )}
                 </>
               )} */}
-              {comments && (
+                {/* {comments && (
                 <>
                   {comments[0]?.entity_id?.id && (
                     <CommentsFormWrapper
                       entityId={comments[0].entity_id.id}
                       initialComments={comments}
                       executionTrackSelected={
-                        project?.executionTracks?.some((track) => track?.selected === true) ||
+                        project?.executionTracks?.some((track: ExecutionTrack) => track?.selected === true) ||
                         false
                       }
                     />
                   )}
                 </>
-              )}
-              
+              )} */}
+                {!selectedProjectTrack && (
+                  <CommentsFormWrapper
+                    entityId={project.id}
+                    initialComments={comments}
+                    executionTrackSelected={
+                      project?.executionTracks?.some(
+                        (track: ExecutionTrack) => track?.selected === true
+                      ) || false
+                    }
+                  />
+                )}
               </>
             )}
-
           </div>
 
           {/* Sidebar (Desktop View) */}
@@ -267,7 +278,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-lg">
                   <Tag className="w-5 h-5" />
                   <div className="text-base px-0 py-1">
-                    <div className={`w-max text-black project-category project-category--${project.category.weight}`}>
+                    <div
+                      className={`w-max text-black project-category project-category--${project.category.weight}`}
+                    >
                       {project.category.name}
                     </div>
                   </div>

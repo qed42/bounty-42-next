@@ -356,8 +356,6 @@ export async function addTeamToProject(
     ];
   }
 
-  console.log(`PROJECT ID`, projectId)
-
   const updatedProject = await drupal.updateResource(
     "node--project",
     projectId,
