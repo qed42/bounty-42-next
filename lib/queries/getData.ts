@@ -69,7 +69,23 @@ export const GET_PROJECT_BY_PATH = gql`
             executionTracks {
               ... on ParagraphProjectMilestone {
                 __typename
+                executionPlan {
+                  ... on ParagraphMilestone {
+                    id
+                    status
+                    milestoneStatus
+                    milestoneName
+                    milestoneDetails
+                  }
+                }
                 id
+                team {
+                  ... on TermProjectTeam {
+                    id
+                    name
+                  }
+                }
+                selected
               }
             }
             teams {
@@ -82,6 +98,10 @@ export const GET_PROJECT_BY_PATH = gql`
                   mail
                 }
               }
+            }
+            projectMentor {
+              mail
+              name
             }
           }
         }
@@ -164,15 +184,34 @@ export async function getProjectsForUserEmail(email: string): Promise<boolean> {
   }
 }
 
+// export async function getProjectById(id: string): Promise<DrupalNode | null> {
+//   try {
+//     const node = await drupal.getResource<DrupalNode>("node--project", id);
+//     return node;
+//   } catch (error) {
+//     console.error("Error fetching article by ID:", error);
+//     return null;
+//   }
+// }
 export async function getProjectById(id: string): Promise<DrupalNode | null> {
   try {
-    const node = await drupal.getResource<DrupalNode>("node--project", id);
+    const params: Record<string, string> = {
+      include: "field_project_mentor",
+    };
+
+    const node = await drupal.getResource<DrupalNode>(
+      "node--project",
+      id,
+      { params }
+    );
+
     return node;
   } catch (error) {
-    console.error("Error fetching article by ID:", error);
+    console.error("Error fetching project by ID:", error);
     return null;
   }
 }
+
 
 export async function getCommentsForEntity(
   entityId: string

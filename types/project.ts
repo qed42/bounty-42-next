@@ -17,6 +17,38 @@ export type ProjectNode = {
     name: string;
     employeeImage: { url: string };
   }> | null;
+  executionTracks?: Array<{
+    __typename: "ParagraphProjectMilestone";
+    id: string;
+    selected?: boolean;
+    team?: {
+      __typename: "TermProjectTeam";
+      id: string;
+      name: string;
+    } | null;
+    executionPlan?: Array<{
+      __typename: "ParagraphMilestone";
+      id: string;
+      status?: boolean; // GraphQL shows `true/false`
+      milestoneStatus?: string; // "in_progress", "completed", etc.
+      milestoneName?: string;
+      milestoneDetails?: string;
+    }> | null;
+  }> | null;
+  teams?: Array<{
+    __typename: "TermProjectTeam";
+    id: string;
+    name: string;
+    teamMembers?: Array<{
+      id: string;
+      name: string;
+      mail: string;
+    }> | null;
+  }> | null;
+  projectMentor?: {
+    mail: string;
+    name: string;
+  };
 };
 
 export type ProjectEdge = {

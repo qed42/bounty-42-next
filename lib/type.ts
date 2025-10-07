@@ -5,4 +5,6 @@ export type DrupalComment = {
   comment_body?: { value?: string | null } | null;
   uid?: { display_name?: string | null } | null;
   user_id?: { display_name?: string | null } | null;
+  created?: string | null;
+  entity_id?: { id?: string | null } | null;
 };
