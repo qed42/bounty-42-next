@@ -12,7 +12,7 @@ import TeamModalForm from "@/components/03-organisms/team-modal-form";
 import TeamMilestoneWrapper from "@/components/03-organisms/team-milestone-wrapper";
 import { getCommentsForEntity } from "@/lib/queries/getData";
 import { getSessionToken } from "@/lib/getSessionToken";
-import { canUserAccessProjectUpdates } from "@/lib/utils";
+import { canUserAccessProjectUpdates, getMentorEmails } from "@/lib/utils";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
@@ -97,9 +97,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const canUserAccessProjectUpdate =
     selectedProjectTeamMembers.length > 0
       ? canUserAccessProjectUpdates(
-          selectedProjectTeamMembers,
-          response?.field_project_mentor?.mail,
-          token?.email
+          selectedProjectTeamMembers ?? [],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          response?.field_project_mentor?.map((mentor: any) => mentor?.mail) ??
+            [],
+          token?.email ?? ""
         )
       : false;
 
@@ -115,12 +117,13 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   // Fetch projects where the user is a mentor
   const mentorProjects = await getMentorProjects(session.user.email);
   const projectById = await getProjectById(project.id);
+  const mentorEmails = getMentorEmails(projectById?.field_project_mentor);
 
   // Check if this user is the project mentor
   const isProjectMentor =
     mentorProjects &&
     mentorProjects.length > 0 &&
-    projectById?.field_project_mentor?.mail === session.user.email;
+    mentorEmails.includes(session.user.email);
 
   return (
     <AuthGuard>

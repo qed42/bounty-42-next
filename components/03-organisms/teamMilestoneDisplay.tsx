@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -45,6 +46,7 @@ interface ExecutionTrack {
   };
   field_execution_plan: Milestone[];
   field_milestone_status?: string;
+  field_selected?: boolean;
 }
 
 interface ProcessedMilestone {
@@ -64,7 +66,7 @@ interface TeamMilestoneDisplayProps {
   projectNodeId: string;
   userTokenId: string;
   currentUserEmail: string;
-  mentorEmail: string;
+  mentorEmails: { mail: string[] }[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectDetails?: any;
 }
@@ -75,14 +77,14 @@ export default function TeamMilestoneDisplay({
   projectNodeId,
   userTokenId,
   currentUserEmail,
-  mentorEmail,
-  projectDetails
+  mentorEmails,
+  projectDetails,
 }: TeamMilestoneDisplayProps) {
   if (!executionTracks || executionTracks.length === 0) {
     return <p className="text-gray-600">No execution tracks found.</p>;
   }
 
-  const firstTrack = executionTracks[0];
+  const firstTrack = executionTracks?.filter((et) => et.field_selected)[0];
   const teamName = firstTrack?.field_team?.name || "Unknown Team";
 
   const formattedComments: Comment[] = comments.map((c) => ({
@@ -93,8 +95,16 @@ export default function TeamMilestoneDisplay({
 
   return (
     <div className="space-y-8">
-      <TeamMilestoneGroup teamName={teamName} tracks={[firstTrack]} initialComments={formattedComments} projectNodeId={projectNodeId} userTokenId={userTokenId} currentUserEmail={currentUserEmail} mentorEmail={mentorEmail}
-        projectDetails={projectDetails} />
+      <TeamMilestoneGroup
+        teamName={teamName}
+        tracks={[firstTrack]}
+        initialComments={formattedComments}
+        projectNodeId={projectNodeId}
+        userTokenId={userTokenId}
+        currentUserEmail={currentUserEmail}
+        mentorEmails={mentorEmails}
+        projectDetails={projectDetails}
+      />
     </div>
   );
 }
@@ -105,7 +115,7 @@ interface TeamMilestoneGroupProps {
   initialComments: Comment[];
   projectNodeId: string;
   userTokenId: string;
-  mentorEmail: string;
+  mentorEmails: any;
   currentUserEmail: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectDetails?: any;
@@ -118,8 +128,8 @@ function TeamMilestoneGroup({
   projectNodeId,
   userTokenId,
   currentUserEmail,
-  mentorEmail,
-  projectDetails
+  mentorEmails,
+  projectDetails,
 }: TeamMilestoneGroupProps) {
   const milestones = tracks
     .flatMap((track) =>
@@ -217,7 +227,7 @@ function TeamMilestoneGroup({
     setNewComment("");
 
     // 4. Notify team members via email
-    const teamMembersEmail = mentorEmail.length > 0 ? [mentorEmail] : [];
+    const teamMembersEmail = mentorEmails.length > 0 ? mentorEmails : [];
     tracks?.map((track) => {
       track.field_team?.field_team_members?.forEach((member) => {
         teamMembersEmail.push(member.mail);
@@ -232,7 +242,6 @@ function TeamMilestoneGroup({
         ? "Submitted! Milestone status and comment updated."
         : "Submitted! Comment posted (status unchanged)."
     );
-
   };
 
   const handleDelete = async (commentId: string) => {
@@ -244,7 +253,6 @@ function TeamMilestoneGroup({
       alert("Failed to delete comment.");
     }
   };
-
 
   return (
     <div className="p-5 bg-gray-50 rounded-xl shadow">
@@ -351,7 +359,9 @@ function TeamMilestoneGroup({
             >
               {/* Comment text */}
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">{comment.name}</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {comment.name}
+                </p>
                 <p className="mt-1 text-sm text-gray-800 whitespace-pre-wrap break-words">
                   {comment.text}
                 </p>
@@ -362,7 +372,8 @@ function TeamMilestoneGroup({
                 <button
                   onClick={() => handleDelete(comment.id)}
                   className="ml-3 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
-          title="Delete comment">
+                  title="Delete comment"
+                >
                   <Trash2 size={16} strokeWidth={2} />
                 </button>
               )}

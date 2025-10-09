@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -7,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const canUserAccessProjectUpdates = (
   teamMembers: string[],
-  mentorEmail: string | null = "",
+  mentorsMail: string | null = "",
   currentUserEmail: string | null = ""
 ) => {
   if (!currentUserEmail || !Array.isArray(teamMembers)) return false;
@@ -16,7 +17,7 @@ export const canUserAccessProjectUpdates = (
   const normalizedEmail = currentUserEmail.toLowerCase();
 
   return (
-    normalizedEmail === mentorEmail ||
+    mentorsMail?.includes(normalizedEmail) ||
     teamMembers.some((member) => {
       if (typeof member === "string") {
         return member.toLowerCase() === normalizedEmail;
@@ -24,4 +25,8 @@ export const canUserAccessProjectUpdates = (
       return false;
     })
   );
+};
+
+export const getMentorEmails = (mentors: any[]): string[] => {
+  return mentors?.map((mentor: any) => mentor?.mail) ?? [];
 };

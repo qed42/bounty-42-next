@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import dynamic from "next/dynamic";
@@ -23,7 +24,7 @@ interface TeamMilestoneWrapperProps {
   projectNodeId: string;
   userTokenId: string;
   currentUserEmail: string;
-  projectMentor?: { mail: string };
+  projectMentor?: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectDetails?: any;
 }
@@ -50,7 +51,7 @@ export default function TeamMilestoneWrapper({
       projectNodeId={projectNodeId}
       userTokenId={userTokenId}
       currentUserEmail={currentUserEmail}
-      mentorEmail={projectMentor?.mail || ""}
+      mentorEmails={projectMentor || []}
       projectDetails={projectDetails}
     />
   );
