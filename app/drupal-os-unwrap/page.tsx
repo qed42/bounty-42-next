@@ -287,7 +287,7 @@ const fetchIssuesWithUserActivity = async (userId: string, year = 2025): Promise
  * @param {number} year - Year to filter issues (default: 2025)
  * @returns {Promise<SearchResult>} Object containing issues array and user info
  */
-export const fetchIssuesByUsername = async (username: string, year = 2025): Promise<SearchResult> => {
+const fetchIssuesByUsername = async (username: string, year = 2025): Promise<SearchResult> => {
   // Get user data
   const user = await fetchUserByUsername(username);
   
@@ -310,7 +310,7 @@ export const fetchIssuesByUsername = async (username: string, year = 2025): Prom
  * @param {number} year - Year to filter comments (default: 2025)
  * @returns {Promise<SearchResult>} Object containing issues array and user info
  */
-export const fetchIssuesWithCommentsByUsername = async (username: string, year = 2025): Promise<SearchResult> => {
+const fetchIssuesWithCommentsByUsername = async (username: string, year = 2025): Promise<SearchResult> => {
   // Get user data
   const user = await fetchUserByUsername(username);
   
@@ -330,7 +330,7 @@ export const fetchIssuesWithCommentsByUsername = async (username: string, year =
  * @param {number} year - Year to filter activity (default: 2025)
  * @returns {Promise<SearchResult>} Object containing all issues where user was active
  */
-export const fetchAllIssuesUserWorkedOn = async (username: string, year = 2025): Promise<SearchResult> => {
+const fetchAllIssuesUserWorkedOn = async (username: string, year = 2025): Promise<SearchResult> => {
   // Get user data
   const user = await fetchUserByUsername(username);
   
