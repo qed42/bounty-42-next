@@ -344,6 +344,34 @@ const fetchAllIssuesUserWorkedOn = async (username: string, year = 2025): Promis
   };
 };
 
+/**
+ * Fetches project details by ID
+ * @param {string} id - Node ID of the project
+ * @returns {Promise<string>} Project title
+ */
+const fetchProjectName = async (id: string): Promise<string> => {
+  try {
+    const url = `https://www.drupal.org/api-d7/node/${id}.json`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      mode: 'cors'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Project fetch failed (Status: ${response.status})`);
+    }
+    
+    const data = await response.json();
+    return data.title || 'Unknown Project';
+  } catch (error) {
+    console.error(`Error fetching project ${id}:`, error);
+    return 'Unknown Project';
+  }
+};
+
 // ============================================
 // CONSTANTS AND HELPERS
 // ============================================
@@ -414,6 +442,7 @@ export default function DrupalIssuesApp() {
   const [error, setError] = useState<string>('');
   const [totalCount, setTotalCount] = useState<number>(0);
   const [searchType, setSearchType] = useState<string>('all'); // 'authored', 'commented', or 'all'
+  const [topProject, setTopProject] = useState<{ name: string; count: number } | null>(null);
 
   const handleSearch = async () => {
     if (!username.trim()) {
@@ -439,6 +468,29 @@ export default function DrupalIssuesApp() {
       
       setIssues(result.issues);
       setTotalCount(result.totalCount);
+
+      // Calculate top project
+      if (result.issues.length > 0) {
+        const projectCounts = result.issues.reduce((acc, issue) => {
+          if (issue.field_project?.id) {
+            const projectId = issue.field_project.id;
+            acc[projectId] = (acc[projectId] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const topProjectEntry = Object.entries(projectCounts).sort((a, b) => b[1] - a[1])[0];
+        
+        if (topProjectEntry) {
+          const [id, count] = topProjectEntry;
+          const name = await fetchProjectName(id);
+          setTopProject({ name, count });
+        } else {
+          setTopProject(null);
+        }
+      } else {
+        setTopProject(null);
+      }
 
       if (result.totalCount === 0) {
         let message;
@@ -560,15 +612,31 @@ export default function DrupalIssuesApp() {
         </div>
 
         {totalCount > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-4 mb-6">
-            <p className="text-gray-700">
-              Found <span className="font-bold text-blue-600">{totalCount}</span> issue{totalCount !== 1 ? 's' : ''} {
-                searchType === 'all' ? 'worked on' : 
-                searchType === 'authored' ? 'authored' : 
-                'commented on'
-              } by{' '}
-              <span className="font-bold">{username}</span> in 2025
-            </p>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Total Contributions</h3>
+              <p className="text-gray-700">
+                Found <span className="font-bold text-blue-600 text-3xl">{totalCount}</span> issue{totalCount !== 1 ? 's' : ''} {
+                  searchType === 'all' ? 'worked on' : 
+                  searchType === 'authored' ? 'authored' : 
+                  'commented on'
+                } by{' '}
+                <span className="font-bold">{username}</span> in 2025
+              </p>
+            </div>
+            
+            {topProject && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Top Project 2025</h3>
+                <div className="flex items-end gap-2">
+                    <span className="font-bold text-green-600 text-3xl">{topProject.name}</span>
+                    <span className="text-gray-500 mb-1">({topProject.count} contributions)</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  The project you contributed to the most this year.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
