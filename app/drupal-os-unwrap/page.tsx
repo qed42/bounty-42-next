@@ -11,7 +11,6 @@ interface DrupalUser {
   uid: string;
   name: string;
   url?: string;
-  // Add other fields if necessary
 }
 
 interface DrupalIssue {
@@ -59,10 +58,6 @@ interface SearchResult {
 // REUSABLE API UTILITIES
 // ============================================
 
-/**
- * Makes a CORS-enabled fetch request to Drupal.org API
- * Returns both the data and the next page URL if available
- */
 const fetchFromDrupal = async <T,>(url: string): Promise<FetchResult<T>> => {
   const response = await fetch(url, {
     method: 'GET',
@@ -83,11 +78,6 @@ const fetchFromDrupal = async <T,>(url: string): Promise<FetchResult<T>> => {
   };
 };
 
-/**
- * Fetches user information by username
- * @param {string} username - Drupal.org username
- * @returns {Promise<DrupalUser>} User data including uid
- */
 const fetchUserByUsername = async (username: string): Promise<DrupalUser> => {
   const url = `https://www.drupal.org/api-d7/user.json?name=${encodeURIComponent(username)}`;
   const { data } = await fetchFromDrupal<DrupalUser>(url);
@@ -99,13 +89,6 @@ const fetchUserByUsername = async (username: string): Promise<DrupalUser> => {
   return data.list[0];
 };
 
-/**
- * Fetches all issues for a user created after a specific date
- * Uses the "next" URL from API responses for pagination
- * @param {string} userId - User ID
- * @param {number} startTimestamp - Unix timestamp for filtering (optional)
- * @returns {Promise<DrupalIssue[]>} All matching issues
- */
 const fetchAllUserIssues = async (userId: string, startTimestamp: number | null = null): Promise<DrupalIssue[]> => {
   let allIssues: DrupalIssue[] = [];
   let currentUrl: string | null = `https://www.drupal.org/api-d7/node.json?type=project_issue&author=${userId}&sort=created&direction=DESC`;
@@ -115,19 +98,16 @@ const fetchAllUserIssues = async (userId: string, startTimestamp: number | null 
     const issues = data.list || [];
     
     if (issues.length > 0) {
-      // Filter by date if timestamp provided
       const filteredIssues = startTimestamp 
         ? issues.filter(issue => issue.created >= startTimestamp)
         : issues;
       
       allIssues = [...allIssues, ...filteredIssues];
       
-      // If we have a timestamp and found no matching issues in this batch, stop
       if (startTimestamp && filteredIssues.length === 0) {
         break;
       }
       
-      // Move to next page
       currentUrl = nextUrl;
     } else {
       break;
@@ -137,13 +117,6 @@ const fetchAllUserIssues = async (userId: string, startTimestamp: number | null 
   return allIssues;
 };
 
-/**
- * Fetches all issues where user has commented in a specific year
- * Uses the "next" URL from API responses for pagination
- * @param {string} userId - User ID
- * @param {number} year - Year to filter comments
- * @returns {Promise<DrupalIssue[]>} Issues where user commented
- */
 const fetchIssuesWithUserComments = async (userId: string, year = 2025): Promise<DrupalIssue[]> => {
   const startDate = Math.floor(new Date(`${year}-01-01`).getTime() / 1000);
   const endDate = Math.floor(new Date(`${year}-12-31T23:59:59`).getTime() / 1000);
@@ -156,27 +129,16 @@ const fetchIssuesWithUserComments = async (userId: string, year = 2025): Promise
     const comments = data.list || [];
     
     if (comments.length > 0) {
-      // Filter comments from the specified year
       const commentsInYear = comments.filter(comment => 
         comment.created >= startDate && comment.created <= endDate
       );
       
-      // Extract unique issue IDs that we haven't fetched yet
       const newIssueIds = [...new Set(commentsInYear.map(c => c.node.id))]
         .filter(id => !issuesMap.has(id));
       
-      // Fetch the actual issues
       for (const issueId of newIssueIds) {
         try {
           const issueUrl = `https://www.drupal.org/api-d7/node/${issueId}.json`;
-          // We get a single object here, not a list, but fetchFromDrupal expects a list format usually or generics handling needs adjustment.
-          // However, Drupal API for single node usually returns the node object directly?
-          // Let's check fetchFromDrupal implementation.
-          // It expects `data.next` and returns `data`.
-          // If the API returns the object directly, `data.list` will be undefined.
-          // Let's check how it's handled.
-          // The current implementation expects `data.list` in other places, but here we need to capture single item.
-          // Let's create a specific fetch for single item or cast.
           const response = await fetch(issueUrl, {
              method: 'GET',
              headers: { 'Accept': 'application/json' },
@@ -184,7 +146,6 @@ const fetchIssuesWithUserComments = async (userId: string, year = 2025): Promise
           });
           const issueData = await response.json(); 
           
-          // Only add if it's a project issue
           if (issueData.type === 'project_issue') {
             issuesMap.set(issueData.nid, issueData as DrupalIssue);
           }
@@ -193,12 +154,10 @@ const fetchIssuesWithUserComments = async (userId: string, year = 2025): Promise
         }
       }
       
-      // If no matching comments in this batch, stop
       if (commentsInYear.length === 0) {
         break;
       }
       
-      // Move to next page
       currentUrl = nextUrl;
     } else {
       break;
@@ -208,93 +167,9 @@ const fetchIssuesWithUserComments = async (userId: string, year = 2025): Promise
   return Array.from(issuesMap.values());
 };
 
-/**
- * Fetches all issues where user has any activity (authored or commented) in a specific year
- * @param {string} userId - User ID
- * @param {number} year - Year to filter activity
- * @returns {Promise<DrupalIssue[]>} All issues where user was active
- */
-const fetchIssuesWithUserActivity = async (userId: string, year = 2025): Promise<DrupalIssue[]> => {
-  const startDate = Math.floor(new Date(`${year}-01-01`).getTime() / 1000);
-  const endDate = Math.floor(new Date(`${year}-12-31T23:59:59`).getTime() / 1000);
-  
-  // Use a Map to store unique issues by their nid
-  const issuesMap = new Map<string, DrupalIssue>();
-  
-  // 1. Fetch issues authored by user in this year
-  const authoredIssues = await fetchAllUserIssues(userId, startDate);
-  authoredIssues.forEach(issue => {
-    issuesMap.set(issue.nid, issue);
-  });
-  
-  // 2. Fetch issues where user commented in this year
-  let currentUrl: string | null = `https://www.drupal.org/api-d7/comment.json?author=${userId}&sort=created&direction=DESC`;
-
-  while (currentUrl) {
-    const { data, nextUrl }: FetchResult<DrupalComment> = await fetchFromDrupal<DrupalComment>(currentUrl);
-    const comments = data.list || [];
-    
-    if (comments.length > 0) {
-      // Filter comments from the specified year
-      const commentsInYear = comments.filter(comment => 
-        comment.created >= startDate && comment.created <= endDate
-      );
-      
-      // Extract unique issue IDs that aren't already in our map
-      const newIssueIds = [...new Set(commentsInYear.map(c => c.node.id))]
-        .filter(id => !issuesMap.has(id));
-      
-      // Fetch the actual issues
-      for (const issueId of newIssueIds) {
-        try {
-          const issueUrl = `https://www.drupal.org/api-d7/node/${issueId}.json`;
-          
-          const response = await fetch(issueUrl, {
-             method: 'GET',
-             headers: { 'Accept': 'application/json' },
-             mode: 'cors'
-          });
-          const issueData = await response.json();
-
-          // Only add if it's a project issue
-          if (issueData.type === 'project_issue') {
-            issuesMap.set(issueData.nid, issueData as DrupalIssue);
-          }
-        } catch (err) {
-          console.error(`Failed to fetch issue ${issueId}:`, err);
-        }
-      }
-      
-      // If no matching comments in this batch, stop
-      if (commentsInYear.length === 0) {
-        break;
-      }
-      
-      // Move to next page
-      currentUrl = nextUrl;
-    } else {
-      break;
-    }
-  }
-  
-  // Convert map to array and sort by creation date (newest first)
-  return Array.from(issuesMap.values()).sort((a, b) => b.created - a.created);
-};
-
-/**
- * Main function to fetch issues for a username in a specific year
- * @param {string} username - Drupal.org username
- * @param {number} year - Year to filter issues (default: 2025)
- * @returns {Promise<SearchResult>} Object containing issues array and user info
- */
 const fetchIssuesByUsername = async (username: string, year = 2025): Promise<SearchResult> => {
-  // Get user data
   const user = await fetchUserByUsername(username);
-  
-  // Calculate start timestamp for the year
   const startDate = Math.floor(new Date(`${year}-01-01`).getTime() / 1000);
-  
-  // Fetch all issues for that year
   const issues = await fetchAllUserIssues(user.uid, startDate);
   
   return {
@@ -304,17 +179,8 @@ const fetchIssuesByUsername = async (username: string, year = 2025): Promise<Sea
   };
 };
 
-/**
- * Main function to fetch issues where user commented in a specific year
- * @param {string} username - Drupal.org username
- * @param {number} year - Year to filter comments (default: 2025)
- * @returns {Promise<SearchResult>} Object containing issues array and user info
- */
 const fetchIssuesWithCommentsByUsername = async (username: string, year = 2025): Promise<SearchResult> => {
-  // Get user data
   const user = await fetchUserByUsername(username);
-  
-  // Fetch all issues where user commented in that year
   const issues = await fetchIssuesWithUserComments(user.uid, year);
   
   return {
@@ -324,31 +190,6 @@ const fetchIssuesWithCommentsByUsername = async (username: string, year = 2025):
   };
 };
 
-/**
- * Main function to fetch ALL issues where user was active (authored OR commented) in a specific year
- * @param {string} username - Drupal.org username
- * @param {number} year - Year to filter activity (default: 2025)
- * @returns {Promise<SearchResult>} Object containing all issues where user was active
- */
-const fetchAllIssuesUserWorkedOn = async (username: string, year = 2025): Promise<SearchResult> => {
-  // Get user data
-  const user = await fetchUserByUsername(username);
-  
-  // Fetch all issues where user had any activity
-  const issues = await fetchIssuesWithUserActivity(user.uid, year);
-  
-  return {
-    user,
-    issues,
-    totalCount: issues.length
-  };
-};
-
-/**
- * Fetches project details by ID
- * @param {string} id - Node ID of the project
- * @returns {Promise<string>} Project title
- */
 const fetchProjectName = async (id: string): Promise<string> => {
   try {
     const url = `https://www.drupal.org/api-d7/node/${id}.json`;
@@ -441,7 +282,7 @@ export default function DrupalIssuesApp() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [searchType, setSearchType] = useState<string>('all'); // 'authored', 'commented', or 'all'
+  const [searchType, setSearchType] = useState<string>('authored');
   const [topProject, setTopProject] = useState<{ name: string; count: number } | null>(null);
 
   const handleSearch = async () => {
@@ -460,16 +301,13 @@ export default function DrupalIssuesApp() {
       
       if (searchType === 'authored') {
         result = await fetchIssuesByUsername(username, 2025);
-      } else if (searchType === 'commented') {
-        result = await fetchIssuesWithCommentsByUsername(username, 2025);
       } else {
-        result = await fetchAllIssuesUserWorkedOn(username, 2025);
+        result = await fetchIssuesWithCommentsByUsername(username, 2025);
       }
       
       setIssues(result.issues);
       setTotalCount(result.totalCount);
 
-      // Calculate top project
       if (result.issues.length > 0) {
         const projectCounts = result.issues.reduce((acc, issue) => {
           if (issue.field_project?.id) {
@@ -493,14 +331,9 @@ export default function DrupalIssuesApp() {
       }
 
       if (result.totalCount === 0) {
-        let message;
-        if (searchType === 'authored') {
-          message = `No issues found for user "${username}" in 2025. They may not have created any issues this year yet.`;
-        } else if (searchType === 'commented') {
-          message = `No issues found where user "${username}" commented in 2025. They may not have commented on any issues this year yet.`;
-        } else {
-          message = `No activity found for user "${username}" in 2025. They may not have worked on any issues this year yet.`;
-        }
+        const message = searchType === 'authored'
+          ? `No issues found for user "${username}" in 2025. They may not have created any issues this year yet.`
+          : `No issues found where user "${username}" commented in 2025. They may not have commented on any issues this year yet.`;
         setError(message);
       }
     } catch (err: unknown) {
@@ -535,16 +368,6 @@ export default function DrupalIssuesApp() {
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">Search Type</label>
             <div className="flex flex-col gap-2">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="all"
-                  checked={searchType === 'all'}
-                  onChange={(e) => setSearchType(e.target.value)}
-                  className="mr-2"
-                />
-                <span className="text-sm text-gray-700">All Issues Worked On (Authored + Commented)</span>
-              </label>
               <label className="flex items-center">
                 <input
                   type="radio"
@@ -617,9 +440,7 @@ export default function DrupalIssuesApp() {
               <h3 className="text-lg font-semibold text-gray-700 mb-2">Total Contributions</h3>
               <p className="text-gray-700">
                 Found <span className="font-bold text-blue-600 text-3xl">{totalCount}</span> issue{totalCount !== 1 ? 's' : ''} {
-                  searchType === 'all' ? 'worked on' : 
-                  searchType === 'authored' ? 'authored' : 
-                  'commented on'
+                  searchType === 'authored' ? 'authored' : 'commented on'
                 } by{' '}
                 <span className="font-bold">{username}</span> in 2025
               </p>
