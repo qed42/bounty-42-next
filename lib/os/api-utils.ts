@@ -37,6 +37,7 @@ type ContributionParams = {
 
 export type ParsedDrupalProfile = {
   memberSince: string | null;
+  accountCreatedYear: number | null;
   menteeCount: number;
   contributorRoles: string[];
   events2025: {
@@ -68,10 +69,9 @@ export const supabase = createClient(
 async function resolveDrupalUserId(username: string): Promise<number> {
   const params = new URLSearchParams({ "filter[name]": username });
 
-  const response = await fetch(
-    `${DRUPAL_USER_BASE_URL}?${params.toString()}`,
-    { cache: "force-cache" }
-  );
+  const response = await fetch(`${DRUPAL_USER_BASE_URL}?${params.toString()}`, {
+    cache: "force-cache",
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to resolve user ${username}`);
@@ -192,14 +192,19 @@ You are extracting structured information from a Drupal.org user profile page.
 
 IMPORTANT CONTEXT:
 - The content is scraped markdown/plain text from a Drupal profile page.
-- Information may appear under headings, labels, or inline text.
+- Information may appear under headings, labels, bullet lists, or inline text.
+- Account creation information may appear as phrases like:
+  - "Member since 2019"
+  - "On Drupal.org for 6 years"
+  - "Joined Drupal.org in 2018"
 
 RULES (ABSOLUTE):
 - Use ONLY the provided content
 - Do NOT guess or infer missing values
-- You MAY derive values from explicit phrases (example: "On Drupal.org for 6 years")
+- You MAY derive values ONLY from explicit phrases
 - If data is missing:
   - memberSince → null
+  - accountCreatedYear → null
   - menteeCount → 0
   - contributorRoles → []
   - events arrays → []
@@ -211,6 +216,7 @@ RULES (ABSOLUTE):
 EXPECTED JSON SHAPE:
 {
   "memberSince": string | null,
+  "accountCreatedYear": number | null,
   "menteeCount": number,
   "contributorRoles": string[],
   "events2025": {
@@ -225,10 +231,14 @@ Drupal profile content:
 ${scrapedContent}
 """
 `;
+
     const result = await model.generateContent(prompt);
     const parts = result.response?.candidates?.[0]?.content?.parts;
 
-    const text = parts?.map((p) => p.text).join("").trim();
+    const text = parts
+      ?.map((p) => p.text)
+      .join("")
+      .trim();
 
     if (!text) {
       throw new Error("Empty Gemini response");
@@ -280,11 +290,7 @@ export async function collectAndStoreDrupalUserData(
     await Promise.all([
       getClosedIssuesByUsername(normalizedUsername, months),
       getClosedIssuesByUsernameForProject(normalizedUsername, months, "ai"),
-      getClosedIssuesByUsernameForProject(
-        normalizedUsername,
-        months,
-        "drupal"
-      ),
+      getClosedIssuesByUsernameForProject(normalizedUsername, months, "drupal"),
     ]);
 
   const scraped = await scrapeDrupalProfile(normalizedUsername);
@@ -294,18 +300,20 @@ export async function collectAndStoreDrupalUserData(
 
   const payload = {
     username: normalizedUsername,
+
     total_issues_count: totalIssues.meta.count,
     total_issues_for_ai_count: totalIssuesForAI.meta.count,
     total_issues_for_drupal_count: totalIssuesForDrupal.meta.count,
+
     member_since: parsed.memberSince,
+    account_created_year: parsed.accountCreatedYear,
+
     mentee_count: parsed.menteeCount,
     contributor_roles: parsed.contributorRoles,
     events_2025: parsed.events2025,
   };
 
-  await supabase
-    .from("drupal_user_stats")
-    .insert(payload);
+  await supabase.from("drupal_user_stats").insert(payload);
 
   return {
     ...payload,
