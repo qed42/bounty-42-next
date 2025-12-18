@@ -2,16 +2,31 @@ import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /* ============================================================
-   Drupal Contributions – Final Correct Implementation
-   ============================================================ */
+   Constants
+============================================================ */
 
 const DRUPAL_USER_BASE_URL = "https://www.drupal.org/jsonapi/user/user";
 const CONTRIBUTION_USER_BASE_URL =
   "https://www.drupal.org/jsonapi/views/contribution_records/by_user";
 
-/* ------------------------------------------------------------
+const JINA_SCRAPER_BASE_URL = "https://r.jina.ai/";
+const DRUPAL_PROFILE_BASE_URL = "https://www.drupal.org/u";
+
+/* ============================================================
+   Helpers
+============================================================ */
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeDrupalUsername(username: string): string {
+  return username.trim().replace(/\s+/g, "-").toLowerCase();
+}
+
+/* ============================================================
    Types
------------------------------------------------------------- */
+============================================================ */
 
 type ContributionParams = {
   userId: number;
@@ -20,124 +35,16 @@ type ContributionParams = {
   page?: number;
 };
 
-/* ------------------------------------------------------------
-   Username → User ID Resolver (REQUIRED)
------------------------------------------------------------- */
-
-async function resolveDrupalUserId(username: string): Promise<number> {
-  try {
-    if (!username) {
-      throw new Error("Username is required");
-    }
-
-    const params = new URLSearchParams({
-      "filter[name]": username,
-    });
-
-    const response = await fetch(
-      `${DRUPAL_USER_BASE_URL}?${params.toString()}`,
-      {
-        cache: "force-cache", // usernames rarely change
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to resolve user: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const json = await response.json();
-
-    if (!json?.data?.length) {
-      throw new Error(`Drupal user not found: ${username}`);
-    }
-
-    // Numeric Drupal UID (string → number)
-    return Number(json.data[0].attributes.drupal_internal__uid);
-  } catch (error) {
-    console.error("resolveDrupalUserId failed:", error);
-    throw error;
-  }
-}
-
-/* ------------------------------------------------------------
-   Core Fetcher (Views JSON:API)
------------------------------------------------------------- */
-
-async function fetchDrupalContributions({
-  userId,
-  months,
-  projectName,
-  page = 0,
-}: ContributionParams) {
-  try {
-    const params = new URLSearchParams({
-      "views-argument[0]": String(userId),
-      page: String(page),
-      "views-filter[field_is_sa_value]": "0",
-      "views-filter[last_status_change]": `${months} months ago`,
-    });
-
-    if (projectName) {
-      params.append("views-filter[field_project_name_value]", projectName);
-    }
-
-    const response = await fetch(
-      `${CONTRIBUTION_USER_BASE_URL}?${params.toString()}`,
-      { cache: "no-store" }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Drupal API error: ${response.status} ${response.statusText}`
-      );
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("fetchDrupalContributions failed:", error);
-    throw error;
-  }
-}
-
-/* ------------------------------------------------------------
-   Public API – What You Actually Use
------------------------------------------------------------- */
-
-export async function getClosedIssuesByUsername(
-  username: string,
-  months: number,
-  page?: number
-) {
-  const userId = await resolveDrupalUserId(username);
-
-  return fetchDrupalContributions({
-    userId,
-    months,
-    page,
-  });
-}
-
-export async function getClosedIssuesByUsernameForProject(
-  username: string,
-  months: number,
-  projectName: string,
-  page?: number
-) {
-  const userId = await resolveDrupalUserId(username);
-
-  return fetchDrupalContributions({
-    userId,
-    months,
-    projectName,
-    page,
-  });
-}
-
-/* ============================================================
-   Drupal Profile Scraper (via r.jina.ai)
-   ============================================================ */
+export type ParsedDrupalProfile = {
+  memberSince: string | null;
+  menteeCount: number;
+  contributorRoles: string[];
+  events2025: {
+    spokenAt: string[];
+    organized: string[];
+    attended: string[];
+  };
+};
 
 type DrupalProfileScrapeResult = {
   username: string;
@@ -145,72 +52,125 @@ type DrupalProfileScrapeResult = {
   content: string;
 };
 
-const JINA_SCRAPER_BASE_URL = "https://r.jina.ai/";
-const DRUPAL_PROFILE_BASE_URL = "https://www.drupal.org/u";
+/* ============================================================
+   Supabase (SERVER ONLY)
+============================================================ */
 
-function normalizeDrupalUsername(username: string): string {
-  return username.trim().replace(/\s+/g, "-");
+export const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY! // 🔒 REQUIRED
+);
+
+/* ============================================================
+   Drupal Username → UID Resolver
+============================================================ */
+
+async function resolveDrupalUserId(username: string): Promise<number> {
+  const params = new URLSearchParams({ "filter[name]": username });
+
+  const response = await fetch(
+    `${DRUPAL_USER_BASE_URL}?${params.toString()}`,
+    { cache: "force-cache" }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to resolve user ${username}`);
+  }
+
+  const json = await response.json();
+
+  if (!json?.data?.length) {
+    throw new Error(`Drupal user not found: ${username}`);
+  }
+
+  return Number(json.data[0].attributes.drupal_internal__uid);
 }
+
+/* ============================================================
+   Drupal Contributions Fetcher
+============================================================ */
+
+async function fetchDrupalContributions({
+  userId,
+  months,
+  projectName,
+  page = 0,
+}: ContributionParams) {
+  const params = new URLSearchParams({
+    "views-argument[0]": String(userId),
+    page: String(page),
+    "views-filter[field_is_sa_value]": "0",
+    "views-filter[last_status_change]": `${months} months ago`,
+  });
+
+  if (projectName) {
+    params.append("views-filter[field_project_name_value]", projectName);
+  }
+
+  const response = await fetch(
+    `${CONTRIBUTION_USER_BASE_URL}?${params.toString()}`,
+    { cache: "no-store" }
+  );
+
+  if (!response.ok) {
+    throw new Error("Drupal contributions fetch failed");
+  }
+
+  return response.json();
+}
+
+/* ============================================================
+   Public Issue APIs
+============================================================ */
+
+export async function getClosedIssuesByUsername(
+  username: string,
+  months: number
+) {
+  const userId = await resolveDrupalUserId(username);
+  return fetchDrupalContributions({ userId, months });
+}
+
+export async function getClosedIssuesByUsernameForProject(
+  username: string,
+  months: number,
+  projectName: string
+) {
+  const userId = await resolveDrupalUserId(username);
+  return fetchDrupalContributions({ userId, months, projectName });
+}
+
+/* ============================================================
+   Drupal Profile Scraper
+============================================================ */
 
 export async function scrapeDrupalProfile(
   username: string
 ): Promise<DrupalProfileScrapeResult> {
-  try {
-    if (!username) {
-      throw new Error("Username is required");
-    }
+  const normalized = normalizeDrupalUsername(username);
+  const profileUrl = `${DRUPAL_PROFILE_BASE_URL}/${normalized}`;
 
-    const normalizedUsername = normalizeDrupalUsername(username);
-    const profileUrl = `${DRUPAL_PROFILE_BASE_URL}/${normalizedUsername}`;
-    const scrapeUrl = `${JINA_SCRAPER_BASE_URL}${profileUrl}`;
+  const response = await fetch(`${JINA_SCRAPER_BASE_URL}${profileUrl}`, {
+    headers: { Accept: "text/plain" },
+    cache: "no-store",
+  });
 
-    const response = await fetch(scrapeUrl, {
-      headers: {
-        Accept: "text/plain",
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Profile scrape failed: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const content = await response.text();
-
-    if (!content.trim()) {
-      throw new Error("Empty scrape result from r.jina.ai");
-    }
-
-    return {
-      username: normalizedUsername,
-      profileUrl,
-      content,
-    };
-  } catch (error) {
-    console.error("scrapeDrupalProfile failed:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error("Profile scrape failed");
   }
+
+  const content = await response.text();
+
+  if (!content.trim()) {
+    throw new Error("Empty profile scrape");
+  }
+
+  return { username: normalized, profileUrl, content };
 }
 
 /* ============================================================
-   Gemini – Parse Drupal Profile Content
-   ============================================================ */
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-type ParsedDrupalProfile = {
-  memberSince: string | null;
-  menteeCount: number;
-  events2025: {
-    spokenAt: string[];
-    organized: string[];
-    attended: string[];
-  };
-};
+   Gemini Parser
+============================================================ */
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -219,10 +179,6 @@ export async function parseDrupalProfileWithGemini(
   retryCount = 0
 ): Promise<ParsedDrupalProfile> {
   try {
-    if (!scrapedContent || !scrapedContent.trim()) {
-      throw new Error("Scraped profile content is empty");
-    }
-
     const model = genAI.getGenerativeModel({
       model: "gemini-3-flash-preview",
       generationConfig: {
@@ -245,6 +201,7 @@ RULES (ABSOLUTE):
 - If data is missing:
   - memberSince → null
   - menteeCount → 0
+  - contributorRoles → []
   - events arrays → []
 - Events MUST be from year 2025 ONLY
 - Return STRICT JSON
@@ -255,6 +212,7 @@ EXPECTED JSON SHAPE:
 {
   "memberSince": string | null,
   "menteeCount": number,
+  "contributorRoles": string[],
   "events2025": {
     "spokenAt": string[],
     "organized": string[],
@@ -267,132 +225,91 @@ Drupal profile content:
 ${scrapedContent}
 """
 `;
-
     const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const parts = result.response?.candidates?.[0]?.content?.parts;
+
+    const text = parts?.map((p) => p.text).join("").trim();
 
     if (!text) {
-      throw new Error("Empty response from Gemini");
+      throw new Error("Empty Gemini response");
     }
 
-    return JSON.parse(text) as ParsedDrupalProfile;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    // Gemini can still throttle occasionally
-    if (error?.message?.includes("429") && retryCount < 1) {
-      console.warn("Gemini rate-limited. Retrying once...");
+    return JSON.parse(text);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("429") &&
+      retryCount < 1
+    ) {
       await sleep(1200);
       return parseDrupalProfileWithGemini(scrapedContent, retryCount + 1);
     }
-
-    console.error("parseDrupalProfileWithGemini failed:", error);
     throw error;
   }
 }
 
 /* ============================================================
-   Drupal User Data Collector
-   ============================================================ */
-
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY! // server-side ONLY
-);
+   Unified Collector (CACHE → FETCH → STORE)
+============================================================ */
 
 export async function collectAndStoreDrupalUserData(
   username: string,
   months: number
 ) {
-  if (!username) {
-    throw new Error("Username is required");
-  }
+  const normalizedUsername = normalizeDrupalUsername(username);
 
-  /* ------------------------------------------------------------
-     1. Check Supabase first (CACHE)
-  ------------------------------------------------------------ */
+  /* ---------- CACHE ---------- */
 
-  const { data: existing, error: fetchError } = await supabase
+  const { data: existing, error } = await supabase
     .from("drupal_user_stats")
     .select("*")
-    .eq("username", username)
+    .eq("username", normalizedUsername)
     .single();
 
-  // If found → return immediately
   if (existing) {
-    return {
-      ...existing,
-      source: "supabase",
-    };
+    return { ...existing, source: "supabase" };
   }
 
-  // If error is NOT "row not found", throw
-  if (fetchError && fetchError.code !== "PGRST116") {
-    console.error("Supabase fetch failed:", fetchError);
-    throw fetchError;
+  if (error && error.code !== "PGRST116") {
+    throw error;
   }
 
-  /* ------------------------------------------------------------
-     2. Fetch issue data (parallel)
-  ------------------------------------------------------------ */
+  /* ---------- FETCH ---------- */
 
   const [totalIssues, totalIssuesForAI, totalIssuesForDrupal] =
     await Promise.all([
-      getClosedIssuesByUsername(username, months),
-      getClosedIssuesByUsernameForProject(username, months, "ai"),
-      getClosedIssuesByUsernameForProject(username, months, "drupal"),
+      getClosedIssuesByUsername(normalizedUsername, months),
+      getClosedIssuesByUsernameForProject(normalizedUsername, months, "ai"),
+      getClosedIssuesByUsernameForProject(
+        normalizedUsername,
+        months,
+        "drupal"
+      ),
     ]);
 
-  /* ------------------------------------------------------------
-     3. Scrape profile
-  ------------------------------------------------------------ */
+  const scraped = await scrapeDrupalProfile(normalizedUsername);
+  const parsed = await parseDrupalProfileWithGemini(scraped.content);
 
-  const scrapedProfile = await scrapeDrupalProfile(username);
-
-  /* ------------------------------------------------------------
-     4. Parse with Gemini (enable when ready)
-  ------------------------------------------------------------ */
-
-  const parsedProfile = await parseDrupalProfileWithGemini(
-    scrapedProfile.content
-  )
-
-  /* ------------------------------------------------------------
-     5. Prepare payload
-  ------------------------------------------------------------ */
+  /* ---------- STORE ---------- */
 
   const payload = {
-    username,
-
+    username: normalizedUsername,
     total_issues_count: totalIssues.meta.count,
     total_issues_for_ai_count: totalIssuesForAI.meta.count,
     total_issues_for_drupal_count: totalIssuesForDrupal.meta.count,
-
-    member_since: parsedProfile.memberSince ?? "",
-    mentee_count: parsedProfile.menteeCount ?? 0,
-    events_2025: parsedProfile.events2025,
+    member_since: parsed.memberSince,
+    mentee_count: parsed.menteeCount,
+    contributor_roles: parsed.contributorRoles,
+    events_2025: parsed.events2025,
   };
 
-  /* ------------------------------------------------------------
-     6. Insert into Supabase
-  ------------------------------------------------------------ */
-
-  const { error: insertError } = await supabase
+  await supabase
     .from("drupal_user_stats")
     .insert(payload);
 
-  if (insertError) {
-    console.error("Supabase insert failed:", insertError);
-    throw insertError;
-  }
-
-  /* ------------------------------------------------------------
-     7. Return result
-  ------------------------------------------------------------ */
-
   return {
     ...payload,
-    scrapedProfileUrl: scrapedProfile.profileUrl,
+    scrapedProfileUrl: scraped.profileUrl,
     source: "fresh",
   };
 }
